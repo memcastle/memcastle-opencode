@@ -5,7 +5,9 @@ Keep the public source and integration IDs `opencode` and the parent module IDs 
 Changes to the source WIT contract, permissions, `since`/`dir` semantics or persisted session identity need a
 compatibility review against existing miners, cursors and mined drawers.
 
-Install Rust with `wasm32-wasip2`, Bun and a MemCastle Core binary; point `MEMCASTLE_BIN` at that binary.
+Install Rust with `wasm32-wasip2`, Bun 1.4.2 and a MemCastle Core binary; point `MEMCASTLE_BIN` at that binary.
+The release archive records the Bun-built integration's SHA-256, so a different bundler version changes its reviewed
+digest even if the source did not change.
 Run these checks before submitting a change:
 
 ```sh

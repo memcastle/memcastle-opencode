@@ -19,6 +19,8 @@ jobs:
         with:
           targets: wasm32-wasip2
       - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
       - name: Download released Core for module tests
         env:
           GH_TOKEN: ${{ github.token }}
