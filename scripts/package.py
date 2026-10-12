@@ -95,7 +95,10 @@ def main() -> None:
                 f"--remap-path-prefix={module_dir}=/module",
             ))
             subprocess.run(["cargo", "build", "--locked", "--release", "--target", "wasm32-wasip2"], cwd=module_dir, env=build_env, check=True)
-            built = module_dir / "target/wasm32-wasip2/release" / f"{name.replace('-', '_')}.wasm"
+            # The public source name need not be its Rust crate name; the source manifest records the build output.
+            with safe_file(module["manifest"]).open("rb") as source_file:
+                source_manifest = tomllib.load(source_file)
+            built = module_dir / source_manifest["build"]["output"]
             if not built.is_file():
                 raise ValueError(f"source {name!r} built no component at {built}")
             shutil.copyfile(built, safe_parent(module["entry"]))
@@ -108,7 +111,8 @@ def main() -> None:
             # A module may carry generated JavaScript or an independently built agent bundle.
             # Always run its declared build before hashing the entry and copying assets.
             if (module_dir / "package.json").is_file():
-                subprocess.run(["npm", "run", "build"], cwd=module_dir, check=True)
+                subprocess.run(["bun", "install", "--frozen-lockfile"], cwd=module_dir, check=True)
+                subprocess.run(["bun", "run", "build"], cwd=module_dir, check=True)
             with safe_file(module["manifest"]).open("rb") as source:
                 integration = tomllib.load(source)
             prefix = f"modules/{name}"

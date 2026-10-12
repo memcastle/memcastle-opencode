@@ -1,10 +1,59 @@
-# opencode
+# OpenCode history source
 
-Text files from a selected directory.
+The conversation history of the [OpenCode](https://opencode.ai) coding agent, as a MemCastle mining source:
+a WebAssembly component built from `src/lib.rs`, one document per session.
 
-This is a separately activatable MemCastle source module using the `memcastle:source@0.4.0` WIT world.
-Build with `cargo build --release --target wasm32-wasip2` after installing the target.
-Run `cargo fmt --all -- --check` and `cargo clippy --locked --target wasm32-wasip2 -- -D warnings` locally.
-Commit `Cargo.lock` after the initial `cargo generate-lockfile` so CI and releases build the same dependency graph.
-Run `memcastle source test .` to check the incremental text-file fixture against the real host.
-Package this module with its containing provider plugin; installing that plugin does not enable this source.
+It is acquisition only.
+MemCastle owns normalisation into drawers, chunking, deduplication, provenance, the cursor, idempotency and the durable
+job, and the live OpenCode integration (`../opencode-integration/`) is separate: it talks to the daemon over MCP and only
+decides when to ask for mining.
+
+## Requirements
+
+OpenCode 1.2 or later (the version that moved history into a database), installed so that `opencode` is on the daemon's
+`PATH`; it was written against 1.18.
+The source never opens OpenCode's database: it runs `opencode db` and `opencode export`, which own it, so no SQLite code is
+part of this component or of MemCastle.
+
+## Use it
+
+```sh
+# `fixtures/bin` holds a stand-in `opencode` for the conformance cases; they need it first on the PATH.
+PATH="$PWD/modules/opencode/fixtures/bin:$PATH" memcastle source test modules/opencode --no-build
+memcastle plugin install dist/opencode-0.1.0.tar.gz --consent opencode=<digest>
+memcastle source enable opencode
+memcastle mine opencode                       # or: memcastle mine opencode since=2026-09 dir=/path/to/workspace
+```
+
+The build needs the `wasm32-wasip2` target (`rustup target add wasm32-wasip2`).
+[Mining sources](https://github.com/memcastle/memcastle/blob/main/docs/mining-sources.md#opencode) describes what is filed and its limits.
+
+## Capabilities and permissions
+
+| Declared | Value | Why |
+|---|---|---|
+| `incremental` | yes | A `time_updated` watermark finds the sessions that changed; only their new tail is filed again. |
+| `retains_raw` | yes | OpenCode's database is the user's to prune and compact, so the transcript is kept once read. |
+| `needs_credentials` | no | OpenCode is run as the user, with whatever access it already has. |
+| `process` | `opencode` | The one program run, by exact name and without a shell. It runs with the daemon's own authority. |
+| `env` | `XDG_DATA_HOME` | Read by OpenCode to find its data directory when it has been moved. |
+| `filesystem`, `network` | none | The component reads no file and reaches no network. |
+
+## Identity and provenance
+
+| Field | Value |
+|---|---|
+| `external_id` | The OpenCode session id, such as `ses_fffdd730a0010XFnQ4chp5K3uS`. |
+| `revision` | A hash of the whole export, so it changes exactly when the session does. |
+| `occurred_at` | When the session was created. |
+| metadata | `session_id`, `directory`, `project_id`, `title`, `version` and `parent_id`. |
+| `uri` | `opencode://session/<id>`. |
+| room, name, tags | The working directory's name, the session id, `transcript` and `opencode`. |
+
+## Tests
+
+`fixtures/opencode-history/` is the conformance case `memcastle source test` runs: four sessions in two working
+directories and the usual noise.
+`fixtures/bin/opencode` stands in for the real command and answers from `fixtures/data/`, so nothing here needs OpenCode
+or a database.
+`scripts/smoke_install.py` installs the complete plugin into a disposable Core daemon.

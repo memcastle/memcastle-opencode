@@ -20,5 +20,6 @@ for module in manifest.get("modules", []):
         ):
             subprocess.run(args, cwd=directory, check=True)
     elif module["type"] == "integration" and (directory / "package.json").is_file():
+        subprocess.run(("bun", "install", "--frozen-lockfile"), cwd=directory, check=True)
         for task in ("format:check", "lint", "test", "build"):
-            subprocess.run(("npm", "run", task), cwd=directory, check=True)
+            subprocess.run(("bun", "run", task), cwd=directory, check=True)

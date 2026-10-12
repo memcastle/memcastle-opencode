@@ -24,7 +24,7 @@ class PluginManifestTests(unittest.TestCase):
             self.assertTrue(path.is_file())
             child = tomllib.loads(path.read_text())
             identity = child["source"] if module["type"] == "source" else child["integration"]
-            self.assertEqual(identity["name"] if module["type"] == "source" else identity["id"], module["id"])
+            self.assertEqual(identity["name"] if module["type"] == "source" else identity["id"], module.get("identity", module["id"]))
             self.assertEqual(identity["version"], module["version"])
             self.assertEqual(child["compatibility"]["memcastle"], plugin["memcastle"])
             if module["type"] == "source":

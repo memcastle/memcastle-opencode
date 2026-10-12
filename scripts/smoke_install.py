@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import socket
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -45,7 +46,24 @@ def incompatible(archive: bytes) -> bytes:
     return output.getvalue()
 
 
+def mined(binary: Path, palace: Path, env: dict[str, str], base: str) -> dict:
+    command = subprocess.run([str(binary), "--json", "--palace", str(palace), "mine", "opencode"],
+                             env=env, capture_output=True, text=True)
+    assert command.returncode == 0, command.stderr
+    submitted = json.loads(command.stdout)
+    for _ in range(120):
+        job = request(base, f"/api/jobs/{submitted['id']}")
+        if job["status"] in ("completed", "failed", "cancelled"):
+            assert job["status"] == "completed", job
+            return job["result"]
+        time.sleep(0.25)
+    raise AssertionError("OpenCode mining job did not complete within 30 seconds")
+
+
 def main() -> None:
+    legacy = sys.argv[1:] == ["--legacy"]
+    if sys.argv[1:] and not legacy:
+        raise SystemExit("usage: scripts/smoke_install.py [--legacy]")
     binary = Path(os.environ["MEMCASTLE_BIN"]).resolve()
     manifest = tomllib.loads((ROOT / "plugin.toml").read_text())
     plugin = manifest["plugin"]["id"]
@@ -55,10 +73,17 @@ def main() -> None:
         env = {key: value for key, value in os.environ.items() if not key.startswith("MEMCASTLE_")}
         env.update({"HOME": scratch, "XDG_DATA_HOME": str(root / "data"),
                     "XDG_CONFIG_HOME": str(root / "config"), "XDG_STATE_HOME": str(root / "state")})
+        # Current Core may ship a legacy OpenCode integration; the disposable assets root tests the plugin alone.
+        (root / "assets").mkdir()
+        env["MEMCASTLE_ASSETS_DIR"] = str(root / "assets")
         # The local installer asks the agent its version; the stand-in never loads user plugins.
         agent = root / "bin"
         agent.mkdir()
-        (agent / "opencode").write_text("#!/bin/sh\nprintf 'opencode 1.99.0\\n'\n")
+        stand_in = ROOT / "modules/opencode/fixtures/bin/opencode"
+        (agent / "opencode").write_text(
+            f"#!/bin/sh\nif [ \"$1\" = '--version' ]; then printf 'opencode 1.99.0\\n'; "
+            f"else exec '{stand_in}' \"$@\"; fi\n"
+        )
         (agent / "opencode").chmod(0o755)
         env["PATH"] = str(agent) + os.pathsep + os.environ["PATH"]
         with socket.socket() as probe:
@@ -84,24 +109,61 @@ def main() -> None:
             expected = {item["id"] for item in manifest.get("modules", [])}
             assert {item["id"] for item in preview["modules"]} == expected
             assert not request(base, "/api/plugins")
+            if legacy:
+                source_archive = root / "legacy.tar.gz"
+                for args in (
+                    ["source", "package", "--no-build", "--output", str(source_archive),
+                     str(ROOT / "modules/opencode")],
+                    ["source", "install", str(source_archive), "--enable", "--consent",
+                     preview["source_consents"][0]["digest"]],
+                ):
+                    command = subprocess.run([str(binary), "--palace", str(root / "palace"), *args],
+                                             env=env, capture_output=True, text=True)
+                    assert command.returncode == 0, command.stderr
+                initial = mined(binary, root / "palace", env, base)
+                assert initial["created"] == 3, initial
+                miner = request(base, "/api/miners/history", method="PUT",
+                                data=json.dumps({"source": "opencode", "options": {"since": "2026-07",
+                                                                                "dir": "/home/me/notes"}}).encode(),
+                                headers={"Content-Type": "application/json"})
+                assert miner["miner"]["source"] == "opencode", miner
+                for args in (["source", "disable", "opencode"], ["source", "remove", "opencode", "--yes"]):
+                    command = subprocess.run([str(binary), "--palace", str(root / "palace"), *args],
+                                             env=env, capture_output=True, text=True)
+                    assert command.returncode == 0, command.stderr
+                blocked = request(base, "/api/plugins/preview", method="POST", data=archive)
+                assert blocked["adoptions"] == ["opencode"], blocked
             consents = {item["source"]: item["digest"] for item in preview["source_consents"]}
             installed = request(base, "/api/plugins", method="POST", data=archive,
-                                headers={"X-MemCastle-Consents": json.dumps(consents)})
+                                headers={"X-MemCastle-Consents": json.dumps(consents),
+                                         "X-MemCastle-Adopt-Sources": json.dumps(["opencode"] if legacy else [])})
             assert installed["id"] == plugin
+            if legacy:
+                miner = request(base, "/api/miners/history")
+                assert miner["source"] == "opencode" and miner["options"] == {
+                    "since": "2026-07", "dir": "/home/me/notes"}, miner
             assert request(base, f"/api/plugins/{plugin}")["id"] == plugin
             for item in manifest.get("modules", []):
+                public_id = item.get("identity", item["id"])
                 if item["type"] == "source":
-                    source = request(base, f"/api/source-packages/{item['id']}")
+                    source = request(base, f"/api/source-packages/{public_id}")
                     assert source["state"] == "installed", source
                     command = subprocess.run([str(binary), "--palace", str(root / "palace"),
-                                              "source", "enable", item["id"]], env=env,
+                                               "source", "enable", public_id], env=env,
                                              capture_output=True, text=True)
                     assert command.returncode == 0, command.stderr
                 elif item["type"] == "integration":
-                    command = subprocess.run([str(binary), "--json", "integration", "install", item["id"]],
+                    command = subprocess.run([str(binary), "--json", "integration", "install", public_id],
                                              env=env, capture_output=True, text=True)
                     assert command.returncode == 0, command.stderr
-                    assert json.loads(command.stdout)["id"] == item["id"]
+                    assert json.loads(command.stdout)["id"] == public_id
+            first = mined(binary, root / "palace", env, base)
+            assert (first["documents"] == 0 if legacy else first["created"] == 3), first
+            hits = request(base, "/api/search?q=rotate%20signing%20keys")
+            assert len(hits) == 1 and hits[0]["source"]["origin"]["source"] == "opencode", hits
+            second = mined(binary, root / "palace", env, base)
+            assert second["documents"] == 0, second
+            assert len(request(base, "/api/search?q=rotate%20signing%20keys")) == 1
             if b'memcastle = ">=0.4, <0.6"' in archive:
                 try:
                     request(base, "/api/plugins/preview", method="POST", data=incompatible(archive))
@@ -116,7 +178,7 @@ def main() -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.communicate()
-    print("generated plugin preview, install, module lifecycle and version gate passed")
+    print("OpenCode plugin preview, install, mining, provenance, incremental cursor and version gate passed")
 
 
 if __name__ == "__main__":
