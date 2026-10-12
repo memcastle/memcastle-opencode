@@ -10,7 +10,7 @@ source = "https://github.com/memcastle/memcastle-plugin.tpl"
 description = "OpenCode coding-agent history and lifecycle integration"
 github_owner = "memcastle"
 integration_template = "https://github.com/memcastle/memcastle-integration.tpl"
-integrations = ["opencode-integration"]
+integrations = []
 memcastle = ">=0.4, <0.6"
 plugin_id = "opencode"
 provider = "opencode"

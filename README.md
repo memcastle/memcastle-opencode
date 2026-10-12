@@ -5,8 +5,7 @@ OpenCode coding-agent history and lifecycle integration.
 This provider plugin owns the versioned package, while each module has its own lifecycle.
 Installing the plugin makes its modules available; enable sources and install integrations separately.
 
-The plugin is `opencode`; its source module is `opencode` and its integration module is
-`opencode-integration`. Both expose the existing public name `opencode`.
+The plugin and both of its independently activated modules are named `opencode`, as in the Pi provider.
 The source keeps the `since` and `dir` options, permission grants and per-source cursor.
 
 Install Bun, Rust with the `wasm32-wasip2` target and a MemCastle Core binary.

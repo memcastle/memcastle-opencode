@@ -5,8 +5,8 @@ a WebAssembly component built from `src/lib.rs`, one document per session.
 
 It is acquisition only.
 MemCastle owns normalisation into drawers, chunking, deduplication, provenance, the cursor, idempotency and the durable
-job, and the live OpenCode integration (`../opencode-integration/`) is separate: it talks to the daemon over MCP and only
-decides when to ask for mining.
+job, and the live OpenCode integration ([integration guide](docs/integration.md)) is separate: it talks to the daemon
+over MCP and only decides when to ask for mining.
 
 ## Requirements
 

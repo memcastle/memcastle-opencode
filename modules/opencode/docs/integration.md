@@ -9,7 +9,7 @@ admin endpoint.
 The connection, memory-mode, discovery and failure foundations are real and tested against a real daemon.
 Wake-up, the shared skills and checkpointing (interval, manual and emergency) are implemented; the other lifecycle
 hooks are wired but empty, and each names the issue that fills it in.
-See [`docs/research.md`](docs/research.md) for how OpenCode's mechanisms map to MemCastle operations, and why.
+See [`research.md`](research.md) for how OpenCode's mechanisms map to MemCastle operations, and why.
 
 ## Use it
 
@@ -25,7 +25,7 @@ To work on the plugin itself, load it from the sources with a one-line module in
 
 ```ts
 // .opencode/plugins/memcastle.ts   (or ~/.config/opencode/plugins/memcastle.ts)
-export { default } from "/path/to/memcastle-opencode/modules/opencode-integration/src/index.ts"
+export { default } from "/path/to/memcastle-opencode/modules/opencode/src/index.ts"
 ```
 
 The same module works under both majors, because its default export carries both entrypoints:
@@ -49,7 +49,7 @@ OpenCode releases older than 1.18.29 are not supported.
 Do **not** also add `mcp.memcastle` to `opencode.json`.
 OpenCode shares one MCP connection across every session in a process, while MemCastle's memory mode belongs to a
 connection, so the plugin opens its own connection per OpenCode session
-(see [Session mode](docs/research.md#session-mode-to-set_mode)).
+(see [Session mode](research.md#session-mode-to-set_mode)).
 Enabling both would show the model two copies of every tool.
 
 ### Configuration
@@ -231,7 +231,7 @@ agree on what a checkpoint is and which failures they report.
 - The review never emits a fact mutation, because that needs ids no MCP tool hands out: `fact` is always `null`.
 - A mistyped checkpoint value falls back to its default rather than breaking the session.
 
-OpenCode 2 evidence is types only, as for the rest of the OpenCode 2 mapping in [the research](docs/research.md#opencode-2).
+OpenCode 2 evidence is types only, as for the rest of the OpenCode 2 mapping in [the research](research.md#opencode-2).
 
 ### Failures
 
@@ -307,7 +307,7 @@ The label is translated to the daemon's wire value (`off` is `disabled`, `read-o
 This differs from the [Pi adapter](../pi/README.md#connection-lifecycle), which holds a single connection.
 One OpenCode process hosts many sessions, and OpenCode's own MCP client shares one connection across all of them.
 MemCastle's memory mode belongs to a connection, so a shared one could not give two sessions different modes
-(see [Session mode](docs/research.md#session-mode-to-set_mode)).
+(see [Session mode](research.md#session-mode-to-set_mode)).
 The plugin therefore owns one connection per OpenCode `sessionID`, and the rest follows from that.
 
 - **Lazy.**
@@ -350,13 +350,13 @@ docs/research.md  the OpenCode mechanism map this package follows
 ## Develop
 
 ```sh
-cargo build                  # the tests start a real daemon from target/debug/memcastle (or $MEMCASTLE_BIN)
+# Build a current MemCastle Core binary separately and set MEMCASTLE_BIN to its absolute path.
 bun install --frozen-lockfile
 bun run typecheck
-bun run test
+MEMCASTLE_BIN=/path/to/memcastle bun run test
 ```
 
-`mise run integrations:check` does all of it for every package under `integrations/`.
+From the provider root, `MEMCASTLE_BIN=/path/to/memcastle python3 scripts/check_modules.py` checks both modules.
 The tests never skip when the binary is missing, because a suite that passes without a daemon proves nothing.
 
 ## Conformance matrix
@@ -396,5 +396,5 @@ The interval checkpoint is partial and the V1 pre-compaction hook is experimenta
 [Checkpointing](#checkpointing), but both are implemented, so neither is a gap.
 Only `emergency-checkpoint` and `background-mining` may be gaps, each recorded as three lines:
 **Missing**, **Fallback** and **Effect**.
-The [research](docs/research.md#gaps-and-risks) lists where OpenCode is likely to need one, so that a gap is documented
+The [research](research.md#gaps-and-risks) lists where OpenCode is likely to need one, so that a gap is documented
 when it is found and not discovered by a user.

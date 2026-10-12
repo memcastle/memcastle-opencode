@@ -23,11 +23,10 @@ contract = "0.4.0"
 
 
 [[modules]]
-id = "opencode-integration"
+id = "opencode"
 type = "integration"
-identity = "opencode"
 version = "0.1.0"
-manifest = "modules/opencode-integration/memcastle-integration.toml"
+manifest = "modules/opencode/memcastle-integration.toml"
 manifest_sha256 = "a1b112d0118bfe4dbf0ae9cc88602f097f5a75623ea03451adf03b66e29c4a87"
-entry = "modules/opencode-integration/dist/index.js"
+entry = "modules/opencode/dist/index.js"
 sha256 = "01c7f9121e79f9563a25d502b4e3d39d11ae9d1f4329b251ee8eb94d6e26c21e"

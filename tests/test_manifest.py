@@ -13,7 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 class PluginManifestTests(unittest.TestCase):
     def test_module_ids_are_unique_and_stable(self):
         plugin = tomllib.loads((ROOT / "plugin.toml").read_text())
-        names = [module["id"] for module in plugin.get("modules", [])]
+        # Source and integration have separate namespaces, even when both expose `opencode`.
+        names = [(module["type"], module["id"]) for module in plugin.get("modules", [])]
         self.assertEqual(len(names), len(set(names)))
         self.assertTrue(plugin["plugin"]["id"])
 
@@ -29,6 +30,11 @@ class PluginManifestTests(unittest.TestCase):
             self.assertEqual(child["compatibility"]["memcastle"], plugin["memcastle"])
             if module["type"] == "source":
                 self.assertEqual(child["compatibility"]["contract"], module["contract"])
+
+    def test_opencode_source_declares_the_watch_trigger_it_documents(self):
+        source = tomllib.loads((ROOT / "modules/opencode/memcastle-source.toml").read_text())
+        self.assertIn("watch", source["triggers"])
+        self.assertTrue(source["triggers"]["watch"]["description"])
 
     def test_packaging_never_follows_a_source_component_symlink(self):
         spec = spec_from_file_location("provider_package", ROOT / "scripts/package.py")

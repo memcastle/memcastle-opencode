@@ -117,7 +117,11 @@ def main() -> None:
                 integration = tomllib.load(source)
             prefix = f"modules/{name}"
             for asset in integration.get("assets", []):
-                directory(files, f"{prefix}/{asset['from']}")
+                if asset["from"] == "dist":
+                    # Source conformance also writes dist/source.wasm; only the agent bundle belongs in this asset.
+                    add(files, module["entry"])
+                else:
+                    directory(files, f"{prefix}/{asset['from']}")
             for skill in integration.get("skills", []):
                 directory(files, (prefix + "/" if skill.get("local", False) else "") + f"skills/{skill['name']}")
         else:

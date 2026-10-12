@@ -125,8 +125,8 @@ def main() -> None:
                 raise RuntimeError("temporary daemon did not become healthy within 30 seconds")
             preview = request(base, "/api/plugins/preview", method="POST", data=archive)
             assert preview["id"] == plugin
-            expected = {item["id"] for item in manifest.get("modules", [])}
-            assert {item["id"] for item in preview["modules"]} == expected
+            expected = {(item["type"], item["id"]) for item in manifest.get("modules", [])}
+            assert {(item["type"], item["id"]) for item in preview["modules"]} == expected
             assert not request(base, "/api/plugins")
             if legacy:
                 source_archive = root / "legacy.tar.gz"
