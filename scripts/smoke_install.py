@@ -10,6 +10,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
 import subprocess
 import sys
@@ -60,6 +61,22 @@ def mined(binary: Path, palace: Path, env: dict[str, str], base: str) -> dict:
     raise AssertionError("OpenCode mining job did not complete within 30 seconds")
 
 
+def grow_alpha(fixtures: Path) -> None:
+    """Move one exported session past the cursor without changing the checked-in fixture."""
+    export = fixtures / "data/export/ses_alpha.out"
+    session = json.loads(export.read_text())
+    session["messages"].append({
+        "info": {"id": "msg_a4", "sessionID": "ses_alpha", "role": "user",
+                 "time": {"created": 1784039290000}},
+        "parts": [{"id": "prt_a9", "type": "text", "text": "what about certificate revocation?"}],
+    })
+    export.write_text(json.dumps(session))
+    sessions = fixtures / "data/sessions.tsv"
+    listing = sessions.read_text()
+    assert "ses_alpha\t1784039280000" in listing
+    sessions.write_text(listing.replace("ses_alpha\t1784039280000", "ses_alpha\t1784365205000"))
+
+
 def main() -> None:
     legacy = sys.argv[1:] == ["--legacy"]
     if sys.argv[1:] and not legacy:
@@ -79,7 +96,9 @@ def main() -> None:
         # The local installer asks the agent its version; the stand-in never loads user plugins.
         agent = root / "bin"
         agent.mkdir()
-        stand_in = ROOT / "modules/opencode/fixtures/bin/opencode"
+        fixtures = root / "fixtures"
+        shutil.copytree(ROOT / "modules/opencode/fixtures", fixtures)
+        stand_in = fixtures / "bin/opencode"
         (agent / "opencode").write_text(
             f"#!/bin/sh\nif [ \"$1\" = '--version' ]; then printf 'opencode 1.99.0\\n'; "
             f"else exec '{stand_in}' \"$@\"; fi\n"
@@ -164,6 +183,10 @@ def main() -> None:
             second = mined(binary, root / "palace", env, base)
             assert second["documents"] == 0, second
             assert len(request(base, "/api/search?q=rotate%20signing%20keys")) == 1
+            grow_alpha(fixtures)
+            third = mined(binary, root / "palace", env, base)
+            assert third["documents"] == 1 and third["superseded"] == 1, third
+            assert len(request(base, "/api/search?q=certificate%20revocation")) == 1
             if b'memcastle = ">=0.4, <0.6"' in archive:
                 try:
                     request(base, "/api/plugins/preview", method="POST", data=incompatible(archive))
@@ -178,7 +201,7 @@ def main() -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.communicate()
-    print("OpenCode plugin preview, install, mining, provenance, incremental cursor and version gate passed")
+    print("OpenCode plugin install, provenance, incremental growth, legacy adoption and version gate passed")
 
 
 if __name__ == "__main__":

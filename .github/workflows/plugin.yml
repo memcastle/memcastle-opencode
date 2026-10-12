@@ -5,6 +5,7 @@ on:
     paths:
       - modules/**
       - skills/**
+      - .gitattributes
       - plugin.toml
       - tests/**
       - scripts/**
@@ -14,6 +15,7 @@ on:
     paths:
       - modules/**
       - skills/**
+      - .gitattributes
       - plugin.toml
       - tests/**
       - scripts/**

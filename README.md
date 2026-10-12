@@ -40,8 +40,8 @@ Preview the plugin archive for the exact permission digest and adoption requirem
 `--consent opencode=<digest> --adopt-source opencode` if history has already been mined.
 Enable `opencode` explicitly afterwards; keep existing miner settings, including `since` and `dir`.
 The agent integration is installed separately with `memcastle integration install opencode`.
-While Core still bundles its legacy OpenCode integration, use an assets root without that integration during a local
-plugin smoke check; two packages offering the same public integration ID cannot be installed together.
+Older Core releases bundle a legacy OpenCode integration; use an assets root without it when checking an installed
+plugin against those releases, since two packages offering the same public integration ID cannot be installed together.
 
 Do not publish a tag until the archive hashes in `plugin.toml` and `modules/opencode/Cargo.lock` are reviewed and
 committed. The release workflow rebuilds and refuses a changed manifest.

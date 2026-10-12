@@ -1,0 +1,3 @@
+# Conformance fixtures compare exact transcript bytes, and the stand-in must keep Unix line endings on Windows.
+modules/opencode/fixtures/** -text
+tests/fixtures/** -text
