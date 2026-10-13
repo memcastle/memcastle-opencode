@@ -5,7 +5,7 @@ Keep the public source and integration IDs `opencode` and the parent module IDs 
 Changes to the source WIT contract, permissions, `since`/`dir` semantics or persisted session identity need a
 compatibility review against existing miners, cursors and mined drawers.
 
-Install Rust with `wasm32-wasip2`, Bun 1.4.2 and a MemCastle Core binary; point `MEMCASTLE_BIN` at that binary.
+Install Rust with `wasm32-wasip2`, Bun 1.4.2 and a plugin-capable MemCastle Core binary; point `MEMCASTLE_BIN` at that binary.
 The release archive records the Bun-built integration's SHA-256, so a different bundler version changes its reviewed
 digest even if the source did not change.
 Run these checks before submitting a change:
@@ -23,8 +23,9 @@ The first command updates `plugin.toml` with hashes of the reviewed module artif
 Commit that manifest and `modules/opencode/Cargo.lock` with your change; CI refuses an unreviewed hash or missing lock.
 The legacy smoke scenario checks an installed legacy source and miner, an explicit adoption, retained mined history and
 incremental acquisition after the handoff.
-CI runs the source against the newest stable released Core, and uses its plugin installer once that release supports
-the plugin contract; use a current Core binary locally to check the newer contract before the first compatible release.
+Shared Core CI tests source fixtures, installation, activation and the legacy migration on the permanent `main`
+prerelease, reports the exact Core SHA, and repeats all checks on explicitly selected plugin-capable stable versions.
+Only add an exact stable tag to `core-versions` when it supports the plugin install contract.
 
 The release workflow publishes `<plugin-id>-<version>.tar.gz` from a reviewed `main` commit tagged
 `opencode/v<version>`. Increment the parent plugin version when the archive changes; module versions change only when
