@@ -2,25 +2,8 @@ name: 🧩 OpenCode plugin
 
 on:
   pull_request:
-    paths:
-      - modules/**
-      - skills/**
-      - .gitattributes
-      - plugin.toml
-      - tests/**
-      - scripts/**
-      - .github/workflows/plugin.yml
-      - .github/workflows/release.yml
   push:
-    paths:
-      - modules/**
-      - skills/**
-      - .gitattributes
-      - plugin.toml
-      - tests/**
-      - scripts/**
-      - .github/workflows/plugin.yml
-      - .github/workflows/release.yml
+    branches: [main]
   workflow_dispatch:
   workflow_call:
     outputs:

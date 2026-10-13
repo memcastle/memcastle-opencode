@@ -27,6 +27,7 @@ OpenCode builds and checks its own archive; Core's shared validation tests sourc
 activation and the legacy migration on the permanent `main`
 prerelease, reports the exact Core SHA, and repeats all checks on explicitly selected plugin-capable stable versions.
 Only add an exact stable tag to `core-versions` when it supports the plugin install contract.
+CI runs once per pull request and on every push to `main`, including merges.
 
 The release workflow publishes `<plugin-id>-<version>.tar.gz` from a reviewed `main` commit tagged
 `opencode/v<version>`. Increment the parent plugin version when the archive changes; module versions change only when
