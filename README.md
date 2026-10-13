@@ -26,10 +26,14 @@ Commit each source module's generated `Cargo.lock` before publishing a release.
 The source module carries the versioned public WIT contract and its own fixtures; the agent integration uses MCP/HTTP.
 No module needs a private Core checkout or a sibling provider to build or test.
 The smoke check starts an isolated daemon and uses a temporary agent configuration to verify the archive install path.
-Provider CI tests sources against the latest stable Core and installs the archive when that release supports plugins;
-Core CI separately tests a freshly composed project against its current install contract.
-The release workflow accepts only an `opencode/v<plugin.toml version>` tag on `main`, then rebuilds the exact
-reviewed artifact, runs manifest tests and source conformance against a stable Core release, and refuses an existing release.
+Provider CI builds the archive locally, then calls Core's shared artifact-validation workflow to test source fixtures
+and install/activate the plugin against the
+permanent `main` prerelease, reporting its exact Core SHA.
+`core-versions` can add exact plugin-capable stable releases to the full matrix; stable Core 0.4.1 predates plugin
+installation and is not eligible. OpenCode's legacy adoption smoke runs on every matrix leg.
+Core CI separately tests the generated plugin contract against its current checkout.
+OpenCode's own release workflow accepts only an `opencode/v<plugin.toml version>` tag on `main`, then rebuilds the exact
+reviewed artifact, runs the compatibility matrix, and refuses an existing release.
 
 ## Moving an existing installation
 
