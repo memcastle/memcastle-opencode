@@ -23,7 +23,8 @@ The first command updates `plugin.toml` with hashes of the reviewed module artif
 Commit that manifest and `modules/opencode/Cargo.lock` with your change; CI refuses an unreviewed hash or missing lock.
 The legacy smoke scenario checks an installed legacy source and miner, an explicit adoption, retained mined history and
 incremental acquisition after the handoff.
-Shared Core CI tests source fixtures, installation, activation and the legacy migration on the permanent `main`
+OpenCode builds and checks its own archive; Core's shared validation tests source fixtures, installation,
+activation and the legacy migration on the permanent `main`
 prerelease, reports the exact Core SHA, and repeats all checks on explicitly selected plugin-capable stable versions.
 Only add an exact stable tag to `core-versions` when it supports the plugin install contract.
 
