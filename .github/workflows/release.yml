@@ -1,4 +1,4 @@
-name: Publish opencode
+name: 📦 Publish OpenCode
 
 on:
   push:
@@ -10,9 +10,11 @@ permissions:
 
 jobs:
   validate:
+    name: 🧪 Validate OpenCode
     uses: ./.github/workflows/plugin.yml
 
   publish:
+    name: 🚀 Publish OpenCode
     needs: validate
     runs-on: ubuntu-latest
     permissions:
