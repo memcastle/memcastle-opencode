@@ -18,8 +18,19 @@ Commit each source module's generated `Cargo.lock` before publishing a release.
 The source module carries the versioned public WIT contract and its own fixtures; the agent integration uses MCP/HTTP.
 No module needs a private Core checkout or a sibling provider to build or test.
 The smoke check starts an isolated daemon and uses a temporary agent configuration to verify the archive install path.
-Provider CI tests sources against the latest stable Core and installs the archive when that release supports plugins;
+Provider CI builds and packages locally, then calls Core's shared artifact-validation workflow for a `[main, versions...]`
+matrix, with additional exact plugin-capable
+stable versions configured in `core-versions` and the `main` prerelease always included.
+The reusable validation workflow follows Core's `main` branch without a revision pin.
+It runs on every pull request and every push to `main`, including merges, without a second push run on PR branches.
+Every version exercises source fixtures and archive installation/activation; incompatible versions fail the workflow.
+The development release body records the exact Core source SHA, and the workflow summary reports it for each run.
 Core CI separately tests a freshly composed project against its current install contract.
-The release workflow accepts only a `opencode/v<plugin.toml version>` tag on `main`, then rebuilds the exact
-reviewed artifact, runs manifest tests and source conformance against a stable Core release, and refuses an existing release.
+The provider's own release workflow accepts only a `opencode/v<plugin.toml version>` tag on `main`, then builds
+the reviewed artifact, runs manifest and compatibility-matrix tests, and refuses an existing release.
 Keep IDs stable when moving this project from `plugins/opencode/` to its own repository.
+
+The separate `coverage.yml` workflow measures native Rust source tests and Bun integration `test:cover` suites,
+then uploads the generated LCOV reports to Codecov using OIDC. Enable this repository in Codecov to see PR statuses.
+Modules without an instrumented suite are not reported; the normal plugin checks still run independently.
+
