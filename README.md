@@ -1,5 +1,11 @@
 # MemCastle for OpenCode
 
+Release delivery uses gh-ship: releasable Conventional Commits open a `release/next` PR on pushes to `main`.
+Review and merge that PR to publish a validated `opencode/vVERSION` archive. Configure the `release` environment
+with `APP_CLIENT_ID` (variable) and `APP_PRIVATE_KEY` (secret) for a GitHub App installed on this repository with
+contents, actions and pull requests write permissions (issues write for creating labels). Set squash title to PR title
+and squash message to blank. `prepare-release` accepts `dry_run` without pushing.
+
 OpenCode coding-agent history and lifecycle integration.
 
 This provider plugin owns the versioned package, while each module has its own lifecycle.
@@ -32,8 +38,8 @@ permanent `main` prerelease, reporting its exact Core SHA.
 `core-versions` can add exact plugin-capable stable releases to the full matrix; stable Core 0.4.1 predates plugin
 installation and is not eligible. OpenCode's legacy adoption smoke runs on every matrix leg.
 Core CI separately tests the generated plugin contract against its current checkout.
-OpenCode's own release workflow accepts only an `opencode/v<plugin.toml version>` tag on `main`, then rebuilds the exact
-reviewed artifact, runs the compatibility matrix, and refuses an existing release.
+OpenCode's publish workflow accepts only an `opencode/v<plugin.toml version>` tag on `main`, then rebuilds the exact
+reviewed artifact and runs the compatibility matrix before uploading to a draft release.
 
 ## Moving an existing installation
 
@@ -46,5 +52,5 @@ The agent integration is installed separately with `memcastle integration instal
 Older Core releases bundle a legacy OpenCode integration; use an assets root without it when checking an installed
 plugin against those releases, since two packages offering the same public integration ID cannot be installed together.
 
-Do not publish a tag until the archive hashes in `plugin.toml` and `modules/opencode/Cargo.lock` are reviewed and
-committed. The release workflow rebuilds and refuses a changed manifest.
+Review and commit the archive hashes in `plugin.toml` and `modules/opencode/Cargo.lock` before merging the Release PR.
+The publish workflow rebuilds and refuses a changed manifest.
