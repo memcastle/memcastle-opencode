@@ -56,4 +56,5 @@ The build needs the `wasm32-wasip2` target (`rustup target add wasm32-wasip2`).
 directories and the usual noise.
 `fixtures/bin/opencode` stands in for the real command and answers from `fixtures/data/`, so nothing here needs OpenCode
 or a database.
-`scripts/smoke_install.py` installs the complete plugin into a disposable Core daemon.
+`memcastle plugin test dist/opencode-0.1.0.tar.gz` installs the archive into a disposable Core daemon;
+`node scripts/smoke_adoption.mjs` checks the legacy cursor handoff and incremental growth.

@@ -3,7 +3,6 @@ memcastle = ">=0.4, <0.6"
 
 [plugin]
 id = "opencode"
-version = "0.1.0"
 provider = "opencode"
 description = "OpenCode coding-agent history and lifecycle integration"
 repository = "https://github.com/memcastle/memcastle-opencode"
@@ -14,19 +13,13 @@ license = "MIT"
 [[modules]]
 id = "opencode"
 type = "source"
-version = "0.1.0"
 manifest = "modules/opencode/memcastle-source.toml"
-manifest_sha256 = "67cd4df52f1c8a9c7a2d0f187dc1b0e6747574ffe0dfc6e08ee8a1fb1297386b"
 entry = "modules/opencode/source.wasm"
-sha256 = "b2bc716383b1781a12eb556e32b9c4f61efb6f875adce3efad4a478b9a01cfbb"
 contract = "0.4.0"
 
 
 [[modules]]
 id = "opencode"
 type = "integration"
-version = "0.1.0"
 manifest = "modules/opencode/memcastle-integration.toml"
-manifest_sha256 = "a1b112d0118bfe4dbf0ae9cc88602f097f5a75623ea03451adf03b66e29c4a87"
 entry = "modules/opencode/dist/index.js"
-sha256 = "01c7f9121e79f9563a25d502b4e3d39d11ae9d1f4329b251ee8eb94d6e26c21e"

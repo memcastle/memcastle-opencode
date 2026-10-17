@@ -12,16 +12,17 @@ Install Bun, Rust with the `wasm32-wasip2` target and a MemCastle Core binary.
 For local development and review:
 
 ```sh
-python3 scripts/package.py
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/check_modules.py
-python3 -m unittest discover -s tests
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py --legacy
+memcastle plugin inspect plugin.toml --json
+# Build modules/opencode for wasm32-wasip2 and run bun run build in modules/opencode first.
+memcastle plugin package plugin.toml
+memcastle plugin test dist/opencode-0.1.0.tar.gz
+MEMCASTLE_BIN=/path/to/memcastle node scripts/smoke_adoption.mjs
 PATH="$PWD/modules/opencode/fixtures/bin:$PATH" /path/to/memcastle source test modules/opencode --no-build
 ```
 
 The archive in `dist/` is independently releasable from MemCastle Core.
-The root `plugin.toml` declares stable module identities; the package script fills artifact hashes after building.
+The root `plugin.toml` is an immutable module descriptor; Core generates the reviewable `manifest.toml` with
+release versions and artifact checksums.
 Commit each source module's generated `Cargo.lock` before publishing a release.
 The source module carries the versioned public WIT contract and its own fixtures; the agent integration uses MCP/HTTP.
 No module needs a private Core checkout or a sibling provider to build or test.
@@ -32,8 +33,8 @@ permanent `main` prerelease, reporting its exact Core SHA.
 `core-versions` can add exact plugin-capable stable releases to the full matrix; stable Core 0.4.1 predates plugin
 installation and is not eligible. OpenCode's legacy adoption smoke runs on every matrix leg.
 Core CI separately tests the generated plugin contract against its current checkout.
-OpenCode's own release workflow accepts only an `opencode/v<plugin.toml version>` tag on `main`, then rebuilds the exact
-reviewed artifact, runs the compatibility matrix, and refuses an existing release.
+OpenCode's release workflow validates the reviewed `opencode/v<manifest.toml version>` tag on `main`, rebuilds the
+exact artifact and runs the compatibility matrix before attaching it to gh-ship's draft release.
 
 ## Moving an existing installation
 
@@ -46,5 +47,6 @@ The agent integration is installed separately with `memcastle integration instal
 Older Core releases bundle a legacy OpenCode integration; use an assets root without it when checking an installed
 plugin against those releases, since two packages offering the same public integration ID cannot be installed together.
 
-Do not publish a tag until the archive hashes in `plugin.toml` and `modules/opencode/Cargo.lock` are reviewed and
-committed. The release workflow rebuilds and refuses a changed manifest.
+Review and commit `manifest.toml` and `modules/opencode/Cargo.lock` before release. gh-ship and git-cliff open a
+reviewed `release/next` PR; configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the `release` environment for an
+installed GitHub App. Native Cargo/Bun coverage and test results are uploaded to Codecov.
