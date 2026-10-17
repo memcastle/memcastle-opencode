@@ -7,7 +7,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target=node --external '@opencode-ai/*' --external '@opencode/*'",
-    "format:check": "python3 scripts/check_format.py",
+    "format:check": "bun scripts/check_format.mjs",
     "lint": "bun run typecheck",
     "typecheck": "tsc --noEmit",
     "test": "bun test --timeout 60000",
