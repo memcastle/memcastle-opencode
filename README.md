@@ -4,6 +4,8 @@ OpenCode coding-agent history and lifecycle integration.
 
 This provider plugin owns the versioned package, while each module has its own lifecycle.
 Installing the plugin makes its modules available; enable sources and install integrations separately.
+Sources live in `sources/<id>/` and integrations in `integrations/<id>/`; typed modules may share an ID without
+sharing their implementation files or activation state.
 
 The plugin and both of its independently activated modules are named `opencode`, as in the Pi provider.
 The source keeps the `since` and `dir` options, permission grants and per-source cursor.
