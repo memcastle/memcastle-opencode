@@ -11,16 +11,19 @@ digest even if the source did not change.
 Run these checks before submitting a change:
 
 ```sh
-python3 scripts/package.py
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/check_modules.py
-python3 -m unittest discover -s tests
+cargo test --manifest-path modules/opencode/Cargo.toml --locked
+# Build the source component for wasm32-wasip2 and copy it to modules/opencode/source.wasm first.
+(cd modules/opencode && bun install --frozen-lockfile && bun run build && bun test --timeout 60000)
+"$MEMCASTLE_BIN" plugin package plugin.toml
+"$MEMCASTLE_BIN" plugin test dist/opencode-0.1.0.tar.gz
 PATH="$PWD/modules/opencode/fixtures/bin:$PATH" /path/to/memcastle source test modules/opencode --no-build
 MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py
 MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py --legacy
 ```
 
-The first command updates `plugin.toml` with hashes of the reviewed module artifacts.
-Commit that manifest and `modules/opencode/Cargo.lock` with your change; CI refuses an unreviewed hash or missing lock.
+Core packaging regenerates `manifest.toml` with hashes of the reviewed module artifacts while leaving the
+project-local `plugin.toml` descriptor untouched. Commit that manifest and `modules/opencode/Cargo.lock`;
+CI refuses an unreviewed hash or missing lock.
 The legacy smoke scenario checks an installed legacy source and miner, an explicit adoption, retained mined history and
 incremental acquisition after the handoff.
 OpenCode builds and checks its own archive; Core's shared validation tests source fixtures, installation,
@@ -29,6 +32,5 @@ prerelease, reports the exact Core SHA, and repeats all checks on explicitly sel
 Only add an exact stable tag to `core-versions` when it supports the plugin install contract.
 CI runs once per pull request and on every push to `main`, including merges.
 
-The release workflow publishes `<plugin-id>-<version>.tar.gz` from a reviewed `main` commit tagged
-`opencode/v<version>`. Increment the parent plugin version when the archive changes; module versions change only when
-their public implementation changes. Review the package inventory and reproducible hashes before tagging.
+git-cliff and gh-ship open a reviewed `release/next` PR for releasable commits, then publish the validated
+`opencode/v<version>` archive and `.sha256sum` when it merges. Review the package inventory and reproducible hashes.

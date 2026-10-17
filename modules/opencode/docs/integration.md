@@ -356,7 +356,8 @@ bun run typecheck
 MEMCASTLE_BIN=/path/to/memcastle bun run test
 ```
 
-From the provider root, `MEMCASTLE_BIN=/path/to/memcastle python3 scripts/check_modules.py` checks both modules.
+From the provider root, run `cargo test --manifest-path modules/opencode/Cargo.toml --locked` and
+`bun test --timeout 60000` in `modules/opencode/` to check both modules.
 The tests never skip when the binary is missing, because a suite that passes without a daemon proves nothing.
 
 ## Conformance matrix
