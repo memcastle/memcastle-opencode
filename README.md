@@ -14,17 +14,17 @@ Install Bun, Rust with the `wasm32-wasip2` target and a MemCastle Core binary.
 For local development and review:
 
 ```sh
-memcastle plugin inspect plugin.toml --json
+memcastle plugin inspect --json
 # Build sources/opencode for wasm32-wasip2 and run bun run build in integrations/opencode first.
-memcastle plugin package plugin.toml
-memcastle plugin test dist/opencode-0.1.0.tar.gz
-MEMCASTLE_BIN=/path/to/memcastle node scripts/smoke_adoption.mjs
-PATH="$PWD/sources/opencode/fixtures/bin:$PATH" /path/to/memcastle source test sources/opencode --no-build
+memcastle plugin package
+memcastle plugin test dist/opencode-VERSION.tar.gz
+node scripts/smoke_adoption.mjs
+PATH="$PWD/sources/opencode/fixtures/bin:$PATH" memcastle source test sources/opencode --no-build
 ```
 
 The archive in `dist/` is independently releasable from MemCastle Core.
-The root `plugin.toml` is an immutable module descriptor; Core generates the reviewable `manifest.toml` with
-release versions and artifact checksums.
+The root `plugin.toml` is immutable; Core generates `manifest.toml` only inside the SCM-versioned archive with
+release versions and artifact checksums. It also packages the shared root `skills/` directory.
 Commit each source module's generated `Cargo.lock` before publishing a release.
 The source module carries the versioned public WIT contract and its own fixtures; the agent integration uses MCP/HTTP.
 No module needs a private Core checkout or a sibling provider to build or test.
@@ -32,10 +32,10 @@ The smoke check starts an isolated daemon and uses a temporary agent configurati
 Provider CI builds the archive locally, then calls Core's shared artifact-validation workflow to test source fixtures
 and install/activate the plugin against the
 permanent `main` prerelease, reporting its exact Core SHA.
-`core-versions` can add exact plugin-capable stable releases to the full matrix; stable Core 0.4.1 predates plugin
+`core_versions` can add plugin-capable stable release trees to the static matrix; stable Core 0.4.1 predates plugin
 installation and is not eligible. OpenCode's legacy adoption smoke runs on every matrix leg.
 Core CI separately tests the generated plugin contract against its current checkout.
-OpenCode's release workflow validates the reviewed `opencode/v<manifest.toml version>` tag on `main`, rebuilds the
+OpenCode's release workflow validates the reviewed `opencode/vVERSION` tag on `main`, rebuilds the
 exact artifact and runs the compatibility matrix before attaching it to gh-ship's draft release.
 
 ## Moving an existing installation
@@ -49,6 +49,6 @@ The agent integration is installed separately with `memcastle integration instal
 Older Core releases bundle a legacy OpenCode integration; use an assets root without it when checking an installed
 plugin against those releases, since two packages offering the same public integration ID cannot be installed together.
 
-Review and commit `manifest.toml` and `sources/opencode/Cargo.lock` before release. gh-ship and git-cliff open a
+Commit `sources/opencode/Cargo.lock` before release. gh-ship and git-cliff open a
 reviewed `release/next` PR; configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the `release` environment for an
 installed GitHub App. Native Cargo/Bun coverage and test results are uploaded to Codecov.

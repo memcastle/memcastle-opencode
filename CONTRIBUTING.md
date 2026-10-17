@@ -14,21 +14,21 @@ Run these checks before submitting a change:
 cargo test --manifest-path sources/opencode/Cargo.toml --locked
 # Build the source component for wasm32-wasip2 and copy it to sources/opencode/source.wasm first.
 (cd integrations/opencode && bun install --frozen-lockfile && bun run build && bun test --timeout 60000)
-"$MEMCASTLE_BIN" plugin package plugin.toml
-"$MEMCASTLE_BIN" plugin test dist/opencode-0.1.0.tar.gz
-PATH="$PWD/sources/opencode/fixtures/bin:$PATH" /path/to/memcastle source test sources/opencode --no-build
-MEMCASTLE_BIN=/path/to/memcastle node scripts/smoke_adoption.mjs
+archive="$("$MEMCASTLE_BIN" plugin package --json | jq -r .archive)"
+"$MEMCASTLE_BIN" plugin test "$archive"
+PATH="$PWD/sources/opencode/fixtures/bin:$PATH" "$MEMCASTLE_BIN" source test sources/opencode --no-build
+ARCHIVE="$archive" node scripts/smoke_adoption.mjs
 ```
 
-Core packaging regenerates `manifest.toml` with hashes of the reviewed module artifacts while leaving the
-project-local `plugin.toml` descriptor untouched. Commit that manifest and `sources/opencode/Cargo.lock`;
-CI refuses an unreviewed hash or missing lock.
+Core packaging generates `manifest.toml` inside the archive with hashes of the built module artifacts while leaving
+the project-local `plugin.toml` descriptor untouched. Commit `sources/opencode/Cargo.lock`;
+CI tests the packaged archive against Core.
 The legacy smoke scenario checks an installed legacy source and miner, an explicit adoption, retained mined history and
 incremental acquisition after the handoff.
 OpenCode builds and checks its own archive; Core's shared validation tests source fixtures, installation,
 activation and the legacy migration on the permanent `main`
 prerelease, reports the exact Core SHA, and repeats all checks on explicitly selected plugin-capable stable versions.
-Only add an exact stable tag to `core-versions` when it supports the plugin install contract.
+Only add a stable release tree to `core_versions` when it supports the plugin install contract.
 CI runs once per pull request and on every push to `main`, including merges.
 
 git-cliff and gh-ship open a reviewed `release/next` PR for releasable commits, then publish the validated
