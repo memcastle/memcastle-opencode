@@ -17,8 +17,7 @@ cargo test --manifest-path modules/opencode/Cargo.toml --locked
 "$MEMCASTLE_BIN" plugin package plugin.toml
 "$MEMCASTLE_BIN" plugin test dist/opencode-0.1.0.tar.gz
 PATH="$PWD/modules/opencode/fixtures/bin:$PATH" /path/to/memcastle source test modules/opencode --no-build
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py --legacy
+MEMCASTLE_BIN=/path/to/memcastle node scripts/smoke_adoption.mjs
 ```
 
 Core packaging regenerates `manifest.toml` with hashes of the reviewed module artifacts while leaving the

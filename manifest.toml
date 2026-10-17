@@ -17,7 +17,7 @@ version = "0.1.0"
 manifest = "modules/opencode/memcastle-source.toml"
 manifest_sha256 = "67cd4df52f1c8a9c7a2d0f187dc1b0e6747574ffe0dfc6e08ee8a1fb1297386b"
 entry = "modules/opencode/source.wasm"
-sha256 = "b2bc716383b1781a12eb556e32b9c4f61efb6f875adce3efad4a478b9a01cfbb"
+sha256 = "b083f45e01b2a923003afa0b80ad72ae5f1157b5eb52018cb5fe64675faa0af8"
 optional = false
 contract = "0.4.0"
 
@@ -35,7 +35,7 @@ optional = false
 "modules/opencode/dist/index.js" = "01c7f9121e79f9563a25d502b4e3d39d11ae9d1f4329b251ee8eb94d6e26c21e"
 "modules/opencode/memcastle-integration.toml" = "a1b112d0118bfe4dbf0ae9cc88602f097f5a75623ea03451adf03b66e29c4a87"
 "modules/opencode/memcastle-source.toml" = "67cd4df52f1c8a9c7a2d0f187dc1b0e6747574ffe0dfc6e08ee8a1fb1297386b"
-"modules/opencode/source.wasm" = "b2bc716383b1781a12eb556e32b9c4f61efb6f875adce3efad4a478b9a01cfbb"
+"modules/opencode/source.wasm" = "b083f45e01b2a923003afa0b80ad72ae5f1157b5eb52018cb5fe64675faa0af8"
 "skills/checkpoint-instructions/SKILL.md" = "dd5572f9027e672f0a08d7e22e0a42a75f5239e4fafb51e2d13bb2ec5ee5ec4b"
 "skills/diary/SKILL.md" = "ded1b8949a4c7369f91b8406ea27c306587cc79c4fdbabe5d39e2eba5f0d073b"
 "skills/memcastle-setup/SKILL.md" = "72ba7e8b7fab9d0be07bf300e9126b24a1f2f21b5bfa5d6c3a8f0cdd83652336"

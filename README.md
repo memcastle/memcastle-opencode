@@ -16,8 +16,7 @@ memcastle plugin inspect plugin.toml --json
 # Build modules/opencode for wasm32-wasip2 and run bun run build in modules/opencode first.
 memcastle plugin package plugin.toml
 memcastle plugin test dist/opencode-0.1.0.tar.gz
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py
-MEMCASTLE_BIN=/path/to/memcastle python3 scripts/smoke_install.py --legacy
+MEMCASTLE_BIN=/path/to/memcastle node scripts/smoke_adoption.mjs
 PATH="$PWD/modules/opencode/fixtures/bin:$PATH" /path/to/memcastle source test modules/opencode --no-build
 ```
 
