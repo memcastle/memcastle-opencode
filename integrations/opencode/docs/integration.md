@@ -25,7 +25,7 @@ To work on the plugin itself, load it from the sources with a one-line module in
 
 ```ts
 // .opencode/plugins/memcastle.ts   (or ~/.config/opencode/plugins/memcastle.ts)
-export { default } from "/path/to/memcastle-opencode/modules/opencode/src/index.ts"
+export { default } from "/path/to/memcastle-opencode/integrations/opencode/src/index.ts"
 ```
 
 The same module works under both majors, because its default export carries both entrypoints:
@@ -356,8 +356,8 @@ bun run typecheck
 MEMCASTLE_BIN=/path/to/memcastle bun run test
 ```
 
-From the provider root, run `cargo test --manifest-path modules/opencode/Cargo.toml --locked` and
-`bun test --timeout 60000` in `modules/opencode/` to check both modules.
+From the provider root, run `cargo test --manifest-path sources/opencode/Cargo.toml --locked` and
+`bun test --timeout 60000` in `integrations/opencode/` to check both modules.
 The tests never skip when the binary is missing, because a suite that passes without a daemon proves nothing.
 
 ## Conformance matrix

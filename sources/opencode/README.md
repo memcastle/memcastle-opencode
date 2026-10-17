@@ -5,7 +5,7 @@ a WebAssembly component built from `src/lib.rs`, one document per session.
 
 It is acquisition only.
 MemCastle owns normalisation into drawers, chunking, deduplication, provenance, the cursor, idempotency and the durable
-job, and the live OpenCode integration ([integration guide](docs/integration.md)) is separate: it talks to the daemon
+job, and the live OpenCode integration ([integration guide](../../integrations/opencode/docs/integration.md)) is separate: it talks to the daemon
 over MCP and only decides when to ask for mining.
 
 ## Requirements
@@ -19,7 +19,7 @@ part of this component or of MemCastle.
 
 ```sh
 # `fixtures/bin` holds a stand-in `opencode` for the conformance cases; they need it first on the PATH.
-PATH="$PWD/modules/opencode/fixtures/bin:$PATH" memcastle source test modules/opencode --no-build
+PATH="$PWD/sources/opencode/fixtures/bin:$PATH" memcastle source test sources/opencode --no-build
 memcastle plugin install dist/opencode-0.1.0.tar.gz --consent opencode=<digest>
 memcastle source enable opencode
 memcastle mine opencode                       # or: memcastle mine opencode since=2026-09 dir=/path/to/workspace
