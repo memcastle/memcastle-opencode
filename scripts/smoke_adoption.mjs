@@ -6,7 +6,7 @@ import { ROOT, cli, isolated } from "./smoke_common.mjs"
 
 await isolated("memcastle-opencode-adopt-", ({ root, env }) => {
   const fixtures = join(root, "fixtures")
-  cpSync(join(ROOT, "modules/opencode/fixtures"), fixtures, { recursive: true })
+  cpSync(join(ROOT, "sources/opencode/fixtures"), fixtures, { recursive: true })
   const agent = join(root, "bin")
   mkdirSync(agent)
   const executable = join(agent, "opencode")
@@ -21,7 +21,7 @@ await isolated("memcastle-opencode-adopt-", ({ root, env }) => {
   const palace = join(root, "palace")
   const legacy = join(root, "legacy.tar.gz")
   cli(["--palace", palace, "source", "package", "--no-build", "--output", legacy,
-    join(ROOT, "modules/opencode")], env)
+    join(ROOT, "sources/opencode")], env)
   cli(["--palace", palace, "source", "install", legacy, "--enable", "--consent",
     preview.source_consents[0].digest], env)
   const run = async () => {

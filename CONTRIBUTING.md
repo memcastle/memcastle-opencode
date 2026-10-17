@@ -11,17 +11,17 @@ digest even if the source did not change.
 Run these checks before submitting a change:
 
 ```sh
-cargo test --manifest-path modules/opencode/Cargo.toml --locked
-# Build the source component for wasm32-wasip2 and copy it to modules/opencode/source.wasm first.
-(cd modules/opencode && bun install --frozen-lockfile && bun run build && bun test --timeout 60000)
+cargo test --manifest-path sources/opencode/Cargo.toml --locked
+# Build the source component for wasm32-wasip2 and copy it to sources/opencode/source.wasm first.
+(cd integrations/opencode && bun install --frozen-lockfile && bun run build && bun test --timeout 60000)
 "$MEMCASTLE_BIN" plugin package plugin.toml
 "$MEMCASTLE_BIN" plugin test dist/opencode-0.1.0.tar.gz
-PATH="$PWD/modules/opencode/fixtures/bin:$PATH" /path/to/memcastle source test modules/opencode --no-build
+PATH="$PWD/sources/opencode/fixtures/bin:$PATH" /path/to/memcastle source test sources/opencode --no-build
 MEMCASTLE_BIN=/path/to/memcastle node scripts/smoke_adoption.mjs
 ```
 
 Core packaging regenerates `manifest.toml` with hashes of the reviewed module artifacts while leaving the
-project-local `plugin.toml` descriptor untouched. Commit that manifest and `modules/opencode/Cargo.lock`;
+project-local `plugin.toml` descriptor untouched. Commit that manifest and `sources/opencode/Cargo.lock`;
 CI refuses an unreviewed hash or missing lock.
 The legacy smoke scenario checks an installed legacy source and miner, an explicit adoption, retained mined history and
 incremental acquisition after the handoff.

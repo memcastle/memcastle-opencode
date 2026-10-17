@@ -4,6 +4,8 @@ OpenCode coding-agent history and lifecycle integration.
 
 This provider plugin owns the versioned package, while each module has its own lifecycle.
 Installing the plugin makes its modules available; enable sources and install integrations separately.
+Sources live in `sources/<id>/` and integrations in `integrations/<id>/`; typed modules may share an ID without
+sharing their implementation files or activation state.
 
 The plugin and both of its independently activated modules are named `opencode`, as in the Pi provider.
 The source keeps the `since` and `dir` options, permission grants and per-source cursor.
@@ -13,11 +15,11 @@ For local development and review:
 
 ```sh
 memcastle plugin inspect plugin.toml --json
-# Build modules/opencode for wasm32-wasip2 and run bun run build in modules/opencode first.
+# Build sources/opencode for wasm32-wasip2 and run bun run build in integrations/opencode first.
 memcastle plugin package plugin.toml
 memcastle plugin test dist/opencode-0.1.0.tar.gz
 MEMCASTLE_BIN=/path/to/memcastle node scripts/smoke_adoption.mjs
-PATH="$PWD/modules/opencode/fixtures/bin:$PATH" /path/to/memcastle source test modules/opencode --no-build
+PATH="$PWD/sources/opencode/fixtures/bin:$PATH" /path/to/memcastle source test sources/opencode --no-build
 ```
 
 The archive in `dist/` is independently releasable from MemCastle Core.
@@ -47,6 +49,6 @@ The agent integration is installed separately with `memcastle integration instal
 Older Core releases bundle a legacy OpenCode integration; use an assets root without it when checking an installed
 plugin against those releases, since two packages offering the same public integration ID cannot be installed together.
 
-Review and commit `manifest.toml` and `modules/opencode/Cargo.lock` before release. gh-ship and git-cliff open a
+Review and commit `manifest.toml` and `sources/opencode/Cargo.lock` before release. gh-ship and git-cliff open a
 reviewed `release/next` PR; configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the `release` environment for an
 installed GitHub App. Native Cargo/Bun coverage and test results are uploaded to Codecov.

@@ -9,10 +9,10 @@ source = "https://github.com/memcastle/memcastle-plugin.tpl"
 [answers]
 codecov = true
 description = "OpenCode coding-agent history and lifecycle integration"
+gh_ship = true
 github_owner = "memcastle"
 integration_template = "https://github.com/memcastle/memcastle-integration.tpl"
-integrations = []
-gh_ship = true
+integrations = ["opencode"]
 memcastle = ">=0.4, <0.6"
 plugin_id = "opencode"
 provider = "opencode"
@@ -31,5 +31,5 @@ commit = "5f2a8350bd82c49ec2370d70c83019ff6fc5a822"
 [[composed]]
 from = "integrations"
 source = "https://github.com/memcastle/memcastle-integration.tpl"
-ref = "04cc8455f056485cb08298a4a0af82909d314fe9"
-commit = "04cc8455f056485cb08298a4a0af82909d314fe9"
+ref = "d055d87eeba173e56ba0c84bc25c8ddeaeeaa0da"
+commit = "d055d87eeba173e56ba0c84bc25c8ddeaeeaa0da"

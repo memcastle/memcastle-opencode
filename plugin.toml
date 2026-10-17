@@ -13,13 +13,13 @@ license = "MIT"
 [[modules]]
 id = "opencode"
 type = "source"
-manifest = "modules/opencode/memcastle-source.toml"
-entry = "modules/opencode/source.wasm"
+manifest = "sources/opencode/memcastle-source.toml"
+entry = "sources/opencode/source.wasm"
 contract = "0.4.0"
 
 
 [[modules]]
 id = "opencode"
 type = "integration"
-manifest = "modules/opencode/memcastle-integration.toml"
-entry = "modules/opencode/dist/index.js"
+manifest = "integrations/opencode/memcastle-integration.toml"
+entry = "integrations/opencode/dist/index.js"
