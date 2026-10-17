@@ -2,7 +2,7 @@
 import assert from "node:assert/strict"
 import { chmodSync, cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { ROOT, cli, isolated } from "./smoke_common.mjs"
+import { ROOT, cli, isolated, pluginArchive } from "./smoke_common.mjs"
 
 await isolated("memcastle-opencode-adopt-", ({ root, env }) => {
   const fixtures = join(root, "fixtures")
@@ -15,7 +15,7 @@ await isolated("memcastle-opencode-adopt-", ({ root, env }) => {
   chmodSync(executable, 0o755)
   env.PATH = `${agent}:${process.env.PATH}`
 }, async ({ root, env, request }) => {
-  const archive = readFileSync(join(ROOT, "dist/opencode-0.1.0.tar.gz"))
+  const archive = readFileSync(pluginArchive())
   const preview = await request("/api/plugins/preview", { method: "POST", data: archive })
   assert.deepEqual(preview.modules.map(({ type, id }) => [type, id]), [["source", "opencode"], ["integration", "opencode"]])
   const palace = join(root, "palace")

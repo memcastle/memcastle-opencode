@@ -20,7 +20,7 @@ part of this component or of MemCastle.
 ```sh
 # `fixtures/bin` holds a stand-in `opencode` for the conformance cases; they need it first on the PATH.
 PATH="$PWD/sources/opencode/fixtures/bin:$PATH" memcastle source test sources/opencode --no-build
-memcastle plugin install dist/opencode-0.1.0.tar.gz --consent opencode=<digest>
+memcastle plugin install dist/opencode-VERSION.tar.gz --consent opencode=<digest>
 memcastle source enable opencode
 memcastle mine opencode                       # or: memcastle mine opencode since=2026-09 dir=/path/to/workspace
 ```
@@ -56,5 +56,5 @@ The build needs the `wasm32-wasip2` target (`rustup target add wasm32-wasip2`).
 directories and the usual noise.
 `fixtures/bin/opencode` stands in for the real command and answers from `fixtures/data/`, so nothing here needs OpenCode
 or a database.
-`memcastle plugin test dist/opencode-0.1.0.tar.gz` installs the archive into a disposable Core daemon;
+`memcastle plugin test dist/opencode-VERSION.tar.gz` installs the archive into a disposable Core daemon;
 `node scripts/smoke_adoption.mjs` checks the legacy cursor handoff and incremental growth.
