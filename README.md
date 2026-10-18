@@ -1,5 +1,7 @@
 # MemCastle for OpenCode
 
+[![CI](https://github.com/memcastle/memcastle-opencode/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/memcastle/memcastle-opencode/actions/workflows/ci.yaml) [![Codecov](https://codecov.io/gh/memcastle/memcastle-opencode/graph/badge.svg)](https://codecov.io/gh/memcastle/memcastle-opencode)
+
 OpenCode coding-agent history and lifecycle integration.
 
 This provider plugin owns the versioned package, while each module has its own lifecycle.
