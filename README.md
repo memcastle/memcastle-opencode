@@ -52,3 +52,5 @@ plugin against those releases, since two packages offering the same public integ
 Commit `sources/opencode/Cargo.lock` before release. gh-ship and git-cliff open a
 reviewed `release/next` PR; configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the `release` environment for an
 installed GitHub App. Native Cargo/Bun coverage and test results are uploaded to Codecov.
+Codecov uses fixed 98% project and `integration-opencode` component floors and a 95% patch floor.
+The `source-opencode` component remains informational until its native tests upload nonempty LCOV.

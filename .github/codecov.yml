@@ -2,9 +2,54 @@ coverage:
   status:
     project:
       default:
-        target: auto
+        target: "98%"
+        threshold: 0%
     patch:
       default:
-        target: auto
+        target: "95%"
+        threshold: 0%
+
+# Each flag names the same typed module as the matching CI upload.
+# A missing report is not carried forward from an earlier commit.
+flags:
+
+  source-opencode:
+    paths: ["sources/opencode/src/**"]
+    carryforward: false
+
+
+  integration-opencode:
+    paths: ["integrations/opencode/src/**"]
+    carryforward: false
+
+
+# Components describe actual file ownership, independently of upload flags.
+# Modules without native coverage stay visible without becoming failing gates.
+component_management:
+  individual_components:
+
+    - component_id: source-opencode
+      name: Source opencode
+      paths: ["sources/opencode/src/**"]
+      statuses:
+        - type: project
+
+          target: 0%
+          informational: true
+
+
+
+    - component_id: integration-opencode
+      name: Integration opencode
+      paths: ["integrations/opencode/src/**"]
+      statuses:
+        - type: project
+
+          target: "98%"
+          threshold: 0%
+
+
+
 comment:
-  layout: reach,diff,flags,files
+  layout: reach,diff,flags,components,files
+  require_changes: false
