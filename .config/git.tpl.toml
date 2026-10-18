@@ -8,6 +8,12 @@ source = "https://github.com/memcastle/memcastle-plugin.tpl"
 
 [answers]
 codecov = true
+codecov_covered_integrations = ["opencode"]
+codecov_covered_sources = []
+codecov_integration_target = "98%"
+codecov_patch_target = "95%"
+codecov_project_target = "98%"
+codecov_source_target = "80%"
 core_versions = ["main"]
 description = "OpenCode coding-agent history and lifecycle integration"
 gh_ship = true
