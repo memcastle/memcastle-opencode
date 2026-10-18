@@ -1,6 +1,6 @@
 {
   "name": "opencode-history",
-  "description": "Four OpenCode sessions in two working directories, with the usual noise: reasoning, a tool output, text OpenCode injected, an attached file, a compaction summary, an unknown part type, messages listed out of order, a session nobody wrote in, and a notice printed before an export. Two sessions share a modification time, and discovery pages by two.",
+  "description": "OpenCode sessions across projects, including missing directory and project metadata, plus noise, an empty session and equal modification times. Discovery pages by two.",
   "locator": "tree",
   "limit": 2,
   "documents": [
@@ -40,6 +40,21 @@
         "### user · 2026-07-17T07:58:20.000Z\nWhich of the two layouts should I use?\nThe flat one or the nested one?\n\n",
         "### assistant · 2026-07-17T07:59:10.000Z\nBoth are fine.\n\n"
       ]
+    },
+    {
+      "external_id": "ses_echo", "title": "Remote session", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": null,
+      "segments": ["# OpenCode session ses_echo\nworking directory: unknown\n\n", "### user · 2026-07-17T07:58:30.000Z\nRemote workspace note.\n\n"]
+    },
+    {
+      "external_id": "ses_foxtrot", "title": "Other project, same directory", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": "project",
+      "segments": ["# OpenCode session ses_foxtrot\nworking directory: /home/me/project\n\n", "### user · 2026-07-17T07:58:30.000Z\nOther project note.\n\n"]
+    },
+    {
+      "external_id": "ses_golf", "title": "Unscoped session", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": null,
+      "segments": ["# OpenCode session ses_golf\nworking directory: unknown\n\n", "### user · 2026-07-17T07:58:30.000Z\nUnscoped workspace note.\n\n"]
     }
   ],
   "skipped": ["ses_charlie"]

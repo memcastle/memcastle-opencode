@@ -15,7 +15,8 @@
 //! not know is skipped, not an error: the export format is OpenCode's to evolve, and a reader that stopped at the first
 //! surprise would stop mining all history.
 //!
-//! The one thing coupled to OpenCode's internals is the discovery query over its `session` table (`id`, `time_updated`):
+//! The one thing coupled to OpenCode's internals is the discovery query over its `session` table (`id`, `time_updated`,
+//! `directory` and `project_id`):
 //! `opencode session list` has no way to ask only for what changed. A schema change shows up as a failed query with
 //! OpenCode's own message, never as silently missing sessions.
 //!
@@ -292,6 +293,32 @@ fn dir_problem(pattern: &str) -> Option<String> {
     }
 }
 
+/// OpenCode's project identifier is opaque. Keep any printable value, but never accept an empty selector that could
+/// accidentally turn a project-specific miner into an unfiltered one.
+fn project_problem(project_id: &str) -> Option<String> {
+    if project_id.is_empty() || project_id.chars().any(char::is_control) {
+        Some(
+            "`project_id` must be a non-empty OpenCode project ID with no control characters"
+                .to_string(),
+        )
+    } else {
+        None
+    }
+}
+
+/// Preserve the old accounts for runs without a project selector, including the exact `dir=...` spelling. The JSON
+/// form is unambiguous even when a directory or project ID contains the separators used in the old account.
+fn selection_account(dir: Option<&str>, project_id: Option<&str>) -> Option<String> {
+    match (dir, project_id) {
+        (Some(dir), None) => Some(format!("dir={dir}")),
+        (None, None) => None,
+        (dir, Some(project_id)) => Some(format!(
+            "selectors={}",
+            json!({ "dir": dir, "project_id": project_id })
+        )),
+    }
+}
+
 /// `pattern` as an SQL string literal for `GLOB`, where `*` is the one wildcard: `?` and `[` are ordinary characters in a
 /// path, so each is put in a bracket of its own to stop `GLOB` reading it as syntax.
 ///
@@ -309,6 +336,11 @@ fn sql_glob(pattern: &str) -> String {
     }
     out.push('\'');
     out
+}
+
+/// An opaque project ID as an SQL string literal (unlike a GLOB, `?` and `[` are not pattern syntax).
+fn sql_literal(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "''"))
 }
 
 /// FNV-1a over the body, with its length: a revision must change when the content does, and nothing more is asked of it.
@@ -437,7 +469,8 @@ impl Guest for OpenCode {
         options: Vec<(String, String)>,
     ) -> Result<SourceRef, SourceError> {
         let mut normalised = Vec::new();
-        let mut account = None;
+        let mut dir = None;
+        let mut project_id = None;
         for (key, value) in options {
             match key.as_str() {
                 // Only narrows what is read, so it is not part of the identity: an earlier `since` next time continues
@@ -454,16 +487,24 @@ impl Guest for OpenCode {
                 // (`/work/*` is every project under `/work`). It is normalised the way OpenCode's own value is stored, so
                 // `/work/app`, `/work/app/` and `/work/./app` are one `dir` and one cursor.
                 "dir" => {
-                    let dir = normalize_dir(value.trim());
-                    if let Some(problem) = dir_problem(&dir) {
+                    let normalized_dir = normalize_dir(value.trim());
+                    if let Some(problem) = dir_problem(&normalized_dir) {
                         return Err(SourceError::InvalidInput(problem));
                     }
-                    account = Some(format!("dir={dir}"));
-                    normalised.push((key, dir));
+                    normalised.push((key, normalized_dir.clone()));
+                    dir = Some(normalized_dir);
+                }
+                "project_id" => {
+                    let id = value.trim();
+                    if let Some(problem) = project_problem(id) {
+                        return Err(SourceError::InvalidInput(problem));
+                    }
+                    project_id = Some(id.to_string());
+                    normalised.push((key, id.to_string()));
                 }
                 other => {
                     return Err(SourceError::InvalidInput(format!(
-                        "the opencode source has no option `{other}`; it accepts `since` and `dir`"
+                        "the opencode source has no option `{other}`; it accepts `since`, `dir` and `project_id`"
                     )));
                 }
             }
@@ -496,7 +537,7 @@ impl Guest for OpenCode {
         };
         Ok(SourceRef {
             source: NAME.to_string(),
-            account,
+            account: selection_account(dir.as_deref(), project_id.as_deref()),
             locator,
             options: normalised,
         })
@@ -528,6 +569,10 @@ impl Guest for OpenCode {
                 " AND rtrim(directory, '/') GLOB {}",
                 sql_glob(dir)
             ));
+        }
+        if let Some(project_id) = option(&source, "project_id") {
+            // An exact ID comparison, rather than GLOB: quotes are escaped before interpolation.
+            filters.push_str(&format!(" AND project_id = {}", sql_literal(project_id)));
         }
         let query = format!(
             "SELECT id, time_updated FROM session WHERE (time_updated > {updated} OR (time_updated = {updated} AND id > '{id}')){filters} ORDER BY time_updated, id LIMIT {}",
@@ -707,3 +752,45 @@ impl Guest for OpenCode {
 }
 
 export!(OpenCode);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn selector_accounts_keep_legacy_identity_and_isolate_combinations() {
+        assert_eq!(selection_account(None, None), None);
+        assert_eq!(
+            selection_account(Some("/work/app"), None).as_deref(),
+            Some("dir=/work/app")
+        );
+        assert_ne!(
+            selection_account(Some("/work/app"), Some("prj_one")),
+            selection_account(Some("/work/app"), None)
+        );
+        assert_ne!(
+            selection_account(Some("/work/app"), Some("prj_one")),
+            selection_account(Some("/work/app"), Some("prj_two"))
+        );
+        assert_ne!(
+            selection_account(Some("/work/app"), Some("prj_one")),
+            selection_account(Some("/work/other"), Some("prj_one"))
+        );
+        assert_ne!(
+            selection_account(None, Some("prj_one")),
+            selection_account(Some("/work/app"), Some("prj_one"))
+        );
+        assert_ne!(
+            selection_account(Some("/work/app|project_id=prj_one"), None),
+            selection_account(Some("/work/app"), Some("prj_one"))
+        );
+    }
+
+    #[test]
+    fn project_ids_are_exact_and_safe_in_queries() {
+        assert!(project_problem("").is_some());
+        assert!(project_problem("a\nb").is_some());
+        assert!(project_problem("prj_one").is_none());
+        assert_eq!(sql_literal("a'b?["), "'a''b?['");
+    }
+}

@@ -1,0 +1,1 @@
+{"info":{"id":"ses_foxtrot","projectID":"prj_two","directory":"/home/me/project","title":"Other project, same directory","time":{"created":1784275100000,"updated":1784275200000}},"messages":[{"info":{"id":"msg_f1","role":"user","time":{"created":1784275110000}},"parts":[{"type":"text","text":"Other project note."}]}]}

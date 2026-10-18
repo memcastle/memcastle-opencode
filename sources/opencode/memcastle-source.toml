@@ -37,6 +37,10 @@ description = "only sessions updated at or after this date (`2026-09`, `2026-09-
 type = "path"
 description = "only sessions of this project directory, or of directories matching a pattern such as `/work/*`"
 
+[options.project_id]
+type = "string"
+description = "only sessions belonging to this exact OpenCode project ID (including sessions with no directory)"
+
 # What can trigger a run of this source. A capability, never an activation: nothing starts until the user defines and
 # enables a trigger (`memcastle trigger set`, docs/triggers.md). A timetable and a poll are the host's, for every source.
 [triggers.watch]

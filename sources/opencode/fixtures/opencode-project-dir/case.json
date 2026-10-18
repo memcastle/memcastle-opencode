@@ -1,0 +1,15 @@
+{
+  "name": "opencode-project-dir",
+  "description": "Combined project and normalized directory filters intersect, excluding another project in the same directory and a session without directory metadata.",
+  "locator": "../opencode-history/tree",
+  "options": { "project_id": "prj_two", "dir": "/home/me/./project/" },
+  "limit": 1,
+  "documents": [
+    {
+      "external_id": "ses_foxtrot", "title": "Other project, same directory", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": "project",
+      "segments": ["# OpenCode session ses_foxtrot\nworking directory: /home/me/project\n\n", "### user · 2026-07-17T07:58:30.000Z\nOther project note.\n\n"]
+    }
+  ],
+  "skipped": ["ses_alpha", "ses_bravo", "ses_charlie", "ses_delta", "ses_echo", "ses_golf"]
+}

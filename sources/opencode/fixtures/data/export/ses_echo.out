@@ -1,0 +1,1 @@
+{"info":{"id":"ses_echo","projectID":"prj_one","title":"Remote session","time":{"created":1784275100000,"updated":1784275200000}},"messages":[{"info":{"id":"msg_e1","role":"user","time":{"created":1784275110000}},"parts":[{"type":"text","text":"Remote workspace note."}]}]}

@@ -36,6 +36,21 @@
         "### user · 2026-07-17T07:58:20.000Z\nWhich of the two layouts should I use?\nThe flat one or the nested one?\n\n",
         "### assistant · 2026-07-17T07:59:10.000Z\nBoth are fine.\n\n"
       ]
+    },
+    {
+      "external_id": "ses_echo", "title": "Remote session", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": null,
+      "segments": ["# OpenCode session ses_echo\nworking directory: unknown\n\n", "### user · 2026-07-17T07:58:30.000Z\nRemote workspace note.\n\n"]
+    },
+    {
+      "external_id": "ses_foxtrot", "title": "Other project, same directory", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": "project",
+      "segments": ["# OpenCode session ses_foxtrot\nworking directory: /home/me/project\n\n", "### user · 2026-07-17T07:58:30.000Z\nOther project note.\n\n"]
+    },
+    {
+      "external_id": "ses_golf", "title": "Unscoped session", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": null,
+      "segments": ["# OpenCode session ses_golf\nworking directory: unknown\n\n", "### user · 2026-07-17T07:58:30.000Z\nUnscoped workspace note.\n\n"]
     }
   ],
   "skipped": [
