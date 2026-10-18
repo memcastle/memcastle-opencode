@@ -5,7 +5,7 @@
 #
 # The discovery query is not evaluated as SQL: the values, the optional `since` and `dir` filters and the limit the source
 # writes into it are read back out of its text, which is also what makes this fail loudly if the source changes its query
-# without this being updated. `sessions.tsv` is id, `time_updated` and the session's directory, tab separated.
+# without this being updated. `sessions.tsv` is id, `time_updated`, directory and project ID, tab separated.
 # A file `../data/fail`, when present, makes every call fail, to exercise the source's error messages.
 # A file `../data/cut` makes the discovery query answer with a truncated document.
 
@@ -38,7 +38,8 @@ case "$1" in
     since=$(printf '%s' "$query" | sed -n 's/.*) AND time_updated >= \([0-9]\{1,\}\).*/\1/p')
     # `GLOB`'s one wildcard is `*`; `?` and `[` are put in a bracket of their own by the source, so they arrive as `[?]` and
     # `[[]` and are read back as the characters they stand for.
-    dir=$(printf '%s' "$query" | sed -n "s|.* AND rtrim(directory, '/') GLOB '\(.*\)' ORDER BY.*|\1|p" | sed "s/''/'/g")
+    dir=$(printf '%s' "$query" | sed -n "s|.* AND rtrim(directory, '/') GLOB '\(.*\)' AND project_id = .*|\1|p; s|.* AND rtrim(directory, '/') GLOB '\(.*\)' ORDER BY.*|\1|p" | sed "s/''/'/g")
+    project=$(printf '%s' "$query" | sed -n "s/.* AND project_id = '\(.*\)' ORDER BY.*/\1/p" | sed "s/''/'/g")
     if [ -z "$t" ] || [ -z "$n" ]; then
       echo "fake opencode: cannot read this query: $query" >&2
       exit 1
@@ -52,6 +53,7 @@ case "$1" in
     tab=$(printf '\t')
     # Passed through the environment, not `-v`, which would read a backslash in a path as an escape.
     export DIR="$dir"
+    export PROJECT="$project"
     sort -t "$tab" -k2,2n -k1,1 "$data/sessions.tsv" | awk -F '\t' -v t="$t" -v id="$id" -v n="$n" -v since="$since" '
       # The pattern as a regular expression: `*` is any run, `[x]` is the character x, everything else is itself.
       function regex(p,   out, i, c) {
@@ -68,7 +70,7 @@ case "$1" in
       # The stored directory is compared without a trailing `/`, as the `rtrim` of the query does.
       function inside(d) { sub(/\/+$/, "", d); return d ~ rx }
       BEGIN { printf "["; if (ENVIRON["DIR"] != "") rx = regex(ENVIRON["DIR"]) }
-      ($2 + 0 > t + 0 || ($2 + 0 == t + 0 && $1 > id)) && (since == "" || $2 + 0 >= since + 0) && (rx == "" || inside($3)) && shown < n {
+      ($2 + 0 > t + 0 || ($2 + 0 == t + 0 && $1 > id)) && (since == "" || $2 + 0 >= since + 0) && (rx == "" || ($3 != "" && inside($3))) && (ENVIRON["PROJECT"] == "" || $4 == ENVIRON["PROJECT"]) && shown < n {
         printf "%s\n  {\n    \"id\": \"%s\",\n    \"time_updated\": %s\n  }", (shown ? "," : ""), $1, $2
         shown++
       }

@@ -15,7 +15,8 @@
 //! not know is skipped, not an error: the export format is OpenCode's to evolve, and a reader that stopped at the first
 //! surprise would stop mining all history.
 //!
-//! The one thing coupled to OpenCode's internals is the discovery query over its `session` table (`id`, `time_updated`):
+//! The one thing coupled to OpenCode's internals is the discovery query over its `session` table (`id`, `time_updated`,
+//! `directory` and `project_id`):
 //! `opencode session list` has no way to ask only for what changed. A schema change shows up as a failed query with
 //! OpenCode's own message, never as silently missing sessions.
 //!
@@ -292,6 +293,32 @@ fn dir_problem(pattern: &str) -> Option<String> {
     }
 }
 
+/// OpenCode's project identifier is opaque. Keep any printable value, but never accept an empty selector that could
+/// accidentally turn a project-specific miner into an unfiltered one.
+fn project_problem(project_id: &str) -> Option<String> {
+    if project_id.is_empty() || project_id.chars().any(char::is_control) {
+        Some(
+            "`project_id` must be a non-empty OpenCode project ID with no control characters"
+                .to_string(),
+        )
+    } else {
+        None
+    }
+}
+
+/// Preserve the old accounts for runs without a project selector, including the exact `dir=...` spelling. The JSON
+/// form is unambiguous even when a directory or project ID contains the separators used in the old account.
+fn selection_account(dir: Option<&str>, project_id: Option<&str>) -> Option<String> {
+    match (dir, project_id) {
+        (Some(dir), None) => Some(format!("dir={dir}")),
+        (None, None) => None,
+        (dir, Some(project_id)) => Some(format!(
+            "selectors={}",
+            json!({ "dir": dir, "project_id": project_id })
+        )),
+    }
+}
+
 /// `pattern` as an SQL string literal for `GLOB`, where `*` is the one wildcard: `?` and `[` are ordinary characters in a
 /// path, so each is put in a bracket of its own to stop `GLOB` reading it as syntax.
 ///
@@ -309,6 +336,75 @@ fn sql_glob(pattern: &str) -> String {
     }
     out.push('\'');
     out
+}
+
+/// An opaque project ID as an SQL string literal (unlike a GLOB, `?` and `[` are not pattern syntax).
+fn sql_literal(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "''"))
+}
+
+/// Validate a run's selectors before asking OpenCode for its database path. `since` only narrows a run; directory and
+/// project ID select independent slices of history and therefore belong to its persisted account identity.
+struct NormalizedOptions {
+    options: Vec<(String, String)>,
+    account: Option<String>,
+}
+
+fn normalize_options(options: Vec<(String, String)>) -> Result<NormalizedOptions, SourceError> {
+    let mut normalised = Vec::new();
+    let mut dir = None;
+    let mut project_id = None;
+    for (key, value) in options {
+        match key.as_str() {
+            "since" => {
+                parse_since(&value).map_err(SourceError::InvalidInput)?;
+                normalised.push((key, value.trim().to_string()));
+            }
+            "dir" => {
+                let normalized_dir = normalize_dir(value.trim());
+                if let Some(problem) = dir_problem(&normalized_dir) {
+                    return Err(SourceError::InvalidInput(problem));
+                }
+                normalised.push((key, normalized_dir.clone()));
+                dir = Some(normalized_dir);
+            }
+            "project_id" => {
+                let id = value.trim();
+                if let Some(problem) = project_problem(id) {
+                    return Err(SourceError::InvalidInput(problem));
+                }
+                project_id = Some(id.to_string());
+                normalised.push((key, id.to_string()));
+            }
+            other => {
+                return Err(SourceError::InvalidInput(format!(
+                    "the opencode source has no option `{other}`; it accepts `since`, `dir` and `project_id`"
+                )));
+            }
+        }
+    }
+    Ok(NormalizedOptions {
+        options: normalised,
+        account: selection_account(dir.as_deref(), project_id.as_deref()),
+    })
+}
+
+/// The discovery query's optional WHERE clauses, shared by ad-hoc runs and saved miners.
+fn discovery_filters(source: &SourceRef) -> String {
+    let mut filters = String::new();
+    if let Some(since) = option(source, "since").and_then(|at| parse_since(at).ok()) {
+        filters.push_str(&format!(" AND time_updated >= {since}"));
+    }
+    if let Some(dir) = option(source, "dir") {
+        filters.push_str(&format!(
+            " AND rtrim(directory, '/') GLOB {}",
+            sql_glob(dir)
+        ));
+    }
+    if let Some(project_id) = option(source, "project_id") {
+        filters.push_str(&format!(" AND project_id = {}", sql_literal(project_id)));
+    }
+    filters
 }
 
 /// FNV-1a over the body, with its length: a revision must change when the content does, and nothing more is asked of it.
@@ -436,38 +532,7 @@ impl Guest for OpenCode {
         locator: Option<String>,
         options: Vec<(String, String)>,
     ) -> Result<SourceRef, SourceError> {
-        let mut normalised = Vec::new();
-        let mut account = None;
-        for (key, value) in options {
-            match key.as_str() {
-                // Only narrows what is read, so it is not part of the identity: an earlier `since` next time continues
-                // from the same cursor, and `--full` is how to reach back.
-                "since" => {
-                    parse_since(&value).map_err(SourceError::InvalidInput)?;
-                    // Checked now, kept as typed: `discover` parses it again, so a value that passes here cannot fail there.
-                    normalised.push((key, value.trim().to_string()));
-                }
-                // Selects one project's sessions out of the same history, so it is part of the identity: each directory
-                // has a cursor of its own, and a `dir` run never moves another's.
-                //
-                // The value is a directory or a pattern in which `*` matches any run of characters, `/` included
-                // (`/work/*` is every project under `/work`). It is normalised the way OpenCode's own value is stored, so
-                // `/work/app`, `/work/app/` and `/work/./app` are one `dir` and one cursor.
-                "dir" => {
-                    let dir = normalize_dir(value.trim());
-                    if let Some(problem) = dir_problem(&dir) {
-                        return Err(SourceError::InvalidInput(problem));
-                    }
-                    account = Some(format!("dir={dir}"));
-                    normalised.push((key, dir));
-                }
-                other => {
-                    return Err(SourceError::InvalidInput(format!(
-                        "the opencode source has no option `{other}`; it accepts `since` and `dir`"
-                    )));
-                }
-            }
-        }
+        let normalized = normalize_options(options)?;
         // Asked first, so a machine without OpenCode fails here with a message that says how to fix it, not on the
         // first query of a job.
         let run = opencode(&["db", "path"]).map_err(|message| {
@@ -496,9 +561,9 @@ impl Guest for OpenCode {
         };
         Ok(SourceRef {
             source: NAME.to_string(),
-            account,
+            account: normalized.account,
             locator,
-            options: normalised,
+            options: normalized.options,
         })
     }
 
@@ -516,19 +581,8 @@ impl Guest for OpenCode {
         // One more than asked for says whether there is a next page. Ordered by (time_updated, id) and strictly after the
         // cursor, so sessions saved in the same millisecond are neither skipped nor read twice. Both values were checked
         // above, which is what makes writing them into the query safe.
-        let mut filters = String::new();
-        // `since` is an integer by now and `dir` is quoted, which is what makes writing them into the query safe too.
-        if let Some(since) = option(&source, "since").and_then(|at| parse_since(at).ok()) {
-            filters.push_str(&format!(" AND time_updated >= {since}"));
-        }
-        if let Some(dir) = option(&source, "dir") {
-            // The stored value is compared without a trailing `/`, as the pattern is, so a project recorded either way
-            // is found by the same `dir`.
-            filters.push_str(&format!(
-                " AND rtrim(directory, '/') GLOB {}",
-                sql_glob(dir)
-            ));
-        }
+        // Options were validated at identify; quote both selectors before putting them into the SQL query.
+        let filters = discovery_filters(&source);
         let query = format!(
             "SELECT id, time_updated FROM session WHERE (time_updated > {updated} OR (time_updated = {updated} AND id > '{id}')){filters} ORDER BY time_updated, id LIMIT {}",
             u64::from(limit) + 1
@@ -707,3 +761,112 @@ impl Guest for OpenCode {
 }
 
 export!(OpenCode);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn selector_accounts_keep_legacy_identity_and_isolate_combinations() {
+        assert_eq!(selection_account(None, None), None);
+        assert_eq!(
+            selection_account(Some("/work/app"), None).as_deref(),
+            Some("dir=/work/app")
+        );
+        assert_ne!(
+            selection_account(Some("/work/app"), Some("prj_one")),
+            selection_account(Some("/work/app"), None)
+        );
+        assert_ne!(
+            selection_account(Some("/work/app"), Some("prj_one")),
+            selection_account(Some("/work/app"), Some("prj_two"))
+        );
+        assert_ne!(
+            selection_account(Some("/work/app"), Some("prj_one")),
+            selection_account(Some("/work/other"), Some("prj_one"))
+        );
+        assert_ne!(
+            selection_account(None, Some("prj_one")),
+            selection_account(Some("/work/app"), Some("prj_one"))
+        );
+        assert_ne!(
+            selection_account(Some("/work/app|project_id=prj_one"), None),
+            selection_account(Some("/work/app"), Some("prj_one"))
+        );
+    }
+
+    #[test]
+    fn project_ids_are_exact_and_safe_in_queries() {
+        assert!(project_problem("").is_some());
+        assert!(project_problem("a\nb").is_some());
+        assert!(project_problem("prj_one").is_none());
+        assert_eq!(sql_literal("a'b?["), "'a''b?['");
+    }
+
+    #[test]
+    fn normalized_selectors_keep_legacy_accounts_and_validate_each_option() {
+        let choices = |options: &[(&str, &str)]| {
+            normalize_options(
+                options
+                    .iter()
+                    .map(|(key, value)| (key.to_string(), value.to_string()))
+                    .collect(),
+            )
+        };
+        let normalized = choices(&[("since", " 2026-07 "), ("dir", "/work/./app/")]).unwrap();
+        assert_eq!(
+            normalized.options,
+            [
+                ("since".into(), "2026-07".into()),
+                ("dir".into(), "/work/app".into())
+            ]
+        );
+        assert_eq!(normalized.account.as_deref(), Some("dir=/work/app"));
+        let normalized = choices(&[("dir", "/work/app"), ("project_id", " prj_one ")]).unwrap();
+        assert_eq!(
+            normalized.options[1],
+            ("project_id".into(), "prj_one".into())
+        );
+        assert_eq!(
+            normalized.account,
+            selection_account(Some("/work/app"), Some("prj_one"))
+        );
+        assert_eq!(choices(&[("since", "2026-07")]).unwrap().account, None);
+        for invalid in [
+            ("since", "yesterday"),
+            ("dir", "relative/path"),
+            ("project_id", "   "),
+            ("project_id", "two\nlines"),
+            ("unknown", "value"),
+        ] {
+            assert!(
+                matches!(choices(&[invalid]), Err(SourceError::InvalidInput(_))),
+                "{invalid:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn discovery_intersects_safe_project_directory_and_date_clauses() {
+        let source = SourceRef {
+            source: NAME.into(),
+            account: None,
+            locator: "/opencode.db".into(),
+            options: vec![
+                ("since".into(), "2026-07-15".into()),
+                ("dir".into(), "/work/*".into()),
+                ("project_id".into(), "prj'one?[".into()),
+            ],
+        };
+        assert_eq!(
+            discovery_filters(&source),
+            " AND time_updated >= 1784073600000 AND rtrim(directory, '/') GLOB '/work/*' AND project_id = 'prj''one?['"
+        );
+        let mut project_only = source;
+        project_only.options.retain(|(key, _)| key == "project_id");
+        assert_eq!(
+            discovery_filters(&project_only),
+            " AND project_id = 'prj''one?['"
+        );
+    }
+}

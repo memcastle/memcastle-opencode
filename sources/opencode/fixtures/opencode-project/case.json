@@ -1,0 +1,34 @@
+{
+  "name": "opencode-project",
+  "description": "An exact project ID selects sessions across directories, even when the working directory is missing; equal timestamps page by ID.",
+  "locator": "../opencode-history/tree",
+  "options": { "project_id": "prj_one" },
+  "limit": 2,
+  "documents": [
+    {
+      "external_id": "ses_alpha", "title": "Rotate the signing keys", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": "project",
+      "segments": [
+        "# OpenCode session ses_alpha\nworking directory: /home/me/project\n\n",
+        "### user · 2026-07-14T14:27:20.000Z\nHow do I rotate the signing keys?\n\n",
+        "### assistant · 2026-07-14T14:27:30.000Z\nLet me look at the script first.\n[tool: read] scripts/rotate.sh\n\n",
+        "### assistant · 2026-07-14T14:27:40.000Z\nRun the rotation script with the new key id.\n\n"
+      ]
+    },
+    {
+      "external_id": "ses_delta", "title": "Which of the two layouts should I use?", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": "project",
+      "segments": [
+        "# OpenCode session ses_delta\nworking directory: /home/me/project/\n\n",
+        "### user · 2026-07-17T07:58:20.000Z\nWhich of the two layouts should I use?\nThe flat one or the nested one?\n\n",
+        "### assistant · 2026-07-17T07:59:10.000Z\nBoth are fine.\n\n"
+      ]
+    },
+    {
+      "external_id": "ses_echo", "title": "Remote session", "kind": "transcript",
+      "tags": ["transcript", "opencode"], "room": null,
+      "segments": ["# OpenCode session ses_echo\nworking directory: unknown\n\n", "### user · 2026-07-17T07:58:30.000Z\nRemote workspace note.\n\n"]
+    }
+  ],
+  "skipped": ["ses_bravo", "ses_charlie", "ses_foxtrot", "ses_golf"]
+}

@@ -10,7 +10,11 @@ Sources live in `sources/<id>/` and integrations in `integrations/<id>/`; typed 
 sharing their implementation files or activation state.
 
 The plugin and both of its independently activated modules are named `opencode`, as in the Pi provider.
-The source keeps the `since` and `dir` options, permission grants and per-source cursor.
+The source keeps the `since` and `dir` options, permission grants and per-source cursor, and supports an exact
+`project_id` selector. With Core's reusable source configurations, define one
+`[[source_configs]]` and multiple `[[miners]]` for per-workspace Wing/Room mappings and independent cursors.
+See the [history source guide](sources/opencode/README.md#shared-source-configuration-separate-workspace-miners) for
+the complete TOML, CLI and REST examples.
 
 Install Bun, Rust with the `wasm32-wasip2` target and a MemCastle Core binary.
 For local development and review:
