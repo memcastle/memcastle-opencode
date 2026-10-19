@@ -37,7 +37,8 @@ No module needs a private Core checkout or a sibling provider to build or test.
 The smoke check starts an isolated daemon and uses a temporary agent configuration to verify the archive install path.
 Provider CI builds the archive locally, then calls Core's shared artifact-validation workflow to test source fixtures
 and install/activate the plugin against the
-permanent `main` prerelease, reporting its exact Core SHA.
+permanent `development` prerelease, reporting its exact Core SHA.
+The Core setup action verifies the fixed Linux binary with `SHA256SUMS` and exposes `MEMCASTLE_BIN` to integration tests.
 `core_versions` can add plugin-capable stable release trees to the static matrix; stable Core 0.4.1 predates plugin
 installation and is not eligible. OpenCode's legacy adoption smoke runs on every matrix leg.
 Core CI separately tests the generated plugin contract against its current checkout.
