@@ -1,63 +1,81 @@
 # MemCastle for OpenCode
 
-[![CI](https://github.com/memcastle/memcastle-opencode/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/memcastle/memcastle-opencode/actions/workflows/ci.yaml) [![Codecov](https://codecov.io/gh/memcastle/memcastle-opencode/graph/badge.svg)](https://codecov.io/gh/memcastle/memcastle-opencode)
+[![CI][ci-badge]][ci-workflow] [![Codecov][codecov-badge]][codecov-project]
+
+[ci-badge]: https://github.com/memcastle/memcastle-opencode/actions/workflows/ci.yaml/badge.svg?branch=main
+[ci-workflow]: https://github.com/memcastle/memcastle-opencode/actions/workflows/ci.yaml
+[codecov-badge]: https://codecov.io/gh/memcastle/memcastle-opencode/graph/badge.svg
+[codecov-project]: https://codecov.io/gh/memcastle/memcastle-opencode
 
 OpenCode coding-agent history and lifecycle integration.
 
-This provider plugin owns the versioned package, while each module has its own lifecycle.
-Installing the plugin makes its modules available; enable sources and install integrations separately.
-Sources live in `sources/<id>/` and integrations in `integrations/<id>/`; typed modules may share an ID without
-sharing their implementation files or activation state.
+This independently released plugin contains a history source and an agent integration, both named `opencode`.
+They have separate implementations and activation states.
+The source preserves the `since` and `dir` options, permission grants and per-source cursor, and supports an exact
+`project_id` selector. For per-workspace Wing/Room mappings and independent cursors, define one `[[source_configs]]`
+and multiple `[[miners]]`. See the [history source guide](sources/opencode/README.md#shared-source-configuration-separate-workspace-miners)
+for TOML, CLI and REST examples.
 
-The plugin and both of its independently activated modules are named `opencode`, as in the Pi provider.
-The source keeps the `since` and `dir` options, permission grants and per-source cursor, and supports an exact
-`project_id` selector. With Core's reusable source configurations, define one
-`[[source_configs]]` and multiple `[[miners]]` for per-workspace Wing/Room mappings and independent cursors.
-See the [history source guide](sources/opencode/README.md#shared-source-configuration-separate-workspace-miners) for
-the complete TOML, CLI and REST examples.
+## Install
 
-Install Bun, Rust with the `wasm32-wasip2` target and a MemCastle Core binary.
-For local development and review:
+When a release is available in the [MemCastle plugin catalogue](https://memcastle.github.io/plugins.json), install it
+by ID with a plugin-capable MemCastle Core binary:
+
+```sh
+memcastle plugin install opencode
+memcastle source enable opencode
+memcastle integration install opencode
+```
+
+Core retrieves and checks the release archive for you. Installation makes the modules available;
+source activation and agent registration are separate steps. If there is no published release yet,
+build the project below and install its `dist/opencode-VERSION.tar.gz` archive instead.
+
+### Moving an existing installation
+
+An installed legacy `opencode` source must be disabled and removed before installing the plugin;
+removing its package does not erase mined drawers, the source cursor or checkpoint history.
+Preview installation for the exact permission digest and adoption requirement, then install with
+`--consent opencode=<digest> --adopt-source opencode` if history has already been mined.
+Enable `opencode` explicitly afterwards; keep existing miner settings, including `since` and `dir`.
+
+Older Core releases bundle a legacy OpenCode integration. Use an assets root without it when checking an installed
+plugin against those releases, since two packages offering the same public integration ID cannot coexist.
+
+## Build and test locally
+
+Install Bun, Rust with `wasm32-wasip2`, and a plugin-capable MemCastle Core binary. Generate and commit
+`sources/opencode/Cargo.lock`, build its component to `sources/opencode/source.wasm`, then build the integration
+in `integrations/opencode/` with Bun. The CI workflow contains the reproducible Wasm build and copy commands.
 
 ```sh
 memcastle plugin inspect --json
-# Build sources/opencode for wasm32-wasip2 and run bun run build in integrations/opencode first.
 memcastle plugin package
 memcastle plugin test dist/opencode-VERSION.tar.gz
 node scripts/smoke_adoption.mjs
 PATH="$PWD/sources/opencode/fixtures/bin:$PATH" memcastle source test sources/opencode --no-build
 ```
 
-The archive in `dist/` is independently releasable from MemCastle Core.
-The root `plugin.toml` is immutable; Core generates `manifest.toml` only inside the SCM-versioned archive with
-release versions and artifact checksums. It also packages the shared root `skills/` directory.
-Commit each source module's generated `Cargo.lock` before publishing a release.
-The source module carries the versioned public WIT contract and its own fixtures; the agent integration uses MCP/HTTP.
-No module needs a private Core checkout or a sibling provider to build or test.
-The smoke check starts an isolated daemon and uses a temporary agent configuration to verify the archive install path.
-Provider CI builds the archive locally, then calls Core's shared artifact-validation workflow to test source fixtures
-and install/activate the plugin against the
-permanent `development` prerelease, reporting its exact Core SHA.
-The Core setup action verifies the fixed Linux binary with `SHA256SUMS` and exposes `MEMCASTLE_BIN` to integration tests.
-`core_versions` can add plugin-capable stable release trees to the static matrix; stable Core 0.4.1 predates plugin
-installation and is not eligible. OpenCode's legacy adoption smoke runs on every matrix leg.
-Core CI separately tests the generated plugin contract against its current checkout.
-OpenCode's release workflow validates the reviewed `opencode/vVERSION` tag on `main`, rebuilds the
-exact artifact and runs the compatibility matrix before attaching it to gh-ship's draft release.
+Use the archive name generated in `dist/` instead of `VERSION`. The archive is independently releasable from Core.
+Packaging leaves `plugin.toml` unchanged and writes a versioned `manifest.toml` inside the archive plus an external
+`.sha256sum`. It also bundles the root `skills/` directory. An `opencode/vVERSION` tag supplies the release version;
+untagged commits receive a development version.
 
-## Moving an existing installation
+## CI and releases
 
-An installed legacy `opencode` source must be disabled and removed before installing the plugin;
-removing its package does not erase its mined drawers, source cursor or checkpoint history.
-Preview the plugin archive for the exact permission digest and adoption requirement, then install it with
-`--consent opencode=<digest> --adopt-source opencode` if history has already been mined.
-Enable `opencode` explicitly afterwards; keep existing miner settings, including `since` and `dir`.
-The agent integration is installed separately with `memcastle integration install opencode`.
-Older Core releases bundle a legacy OpenCode integration; use an assets root without it when checking an installed
-plugin against those releases, since two packages offering the same public integration ID cannot be installed together.
+CI builds the modules and validates the packaged artifact against the selected Core version (`development`).
+Core's shared workflow tests source fixtures, installation, activation and legacy adoption on each matrix leg;
+the Core setup action verifies the binary against `SHA256SUMS` and exposes `MEMCASTLE_BIN` to integration tests.
+Only add stable Core versions to `core_versions` once they support plugin installation.
 
-Commit `sources/opencode/Cargo.lock` before release. gh-ship and git-cliff open a
-reviewed `release/next` PR; configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the `release` environment for an
-installed GitHub App. Native Cargo/Bun coverage and test results are uploaded to Codecov.
-Codecov uses fixed 98% project and `integration-opencode` component floors and a 95% patch floor.
-The `source-opencode` component remains informational until its native tests upload nonempty LCOV.
+gh-ship and git-cliff open a reviewed `release/next` PR. After it merges, the release workflow validates the
+`opencode/vVERSION` tag and publishes the reviewed archive. Configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the
+`release` environment for an installed GitHub App.
+
+Native Cargo/Bun coverage and test results upload to Codecov. The project and `integration-opencode` component
+floors are 98%, with a 95% patch floor; `source-opencode` remains informational until its native tests upload
+nonempty LCOV.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the project checks and [AGENTS.md](AGENTS.md) for coding-agent guidance.
