@@ -23,6 +23,7 @@ integrations = ["opencode"]
 memcastle = ">=0.4, <0.6"
 plugin_id = "opencode"
 provider = "opencode"
+registry = true
 repository_name = "memcastle-opencode"
 ship_token = "app"
 source_template = "https://github.com/memcastle/memcastle-source.tpl"
