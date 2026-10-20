@@ -1,5 +1,13 @@
 # Changelog
 
+## opencode/v0.1.1 - 2026-10-20
+
+
+### Bug Fixes
+- Sync plugin release workflow from template (e8f7304)
+
+### tpl
+- Render memcastle-plugin at main (491d808)
 ## opencode/v0.1.0 - 2026-10-20
 
 
