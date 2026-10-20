@@ -63,10 +63,10 @@ untagged commits receive a development version.
 
 ## CI and releases
 
-CI builds the modules and validates the packaged artifact against the selected Core version (`development`).
+CI builds the modules and validates the packaged artifact against Core `development` and `0.5`.
 Core's shared workflow tests source fixtures, installation, activation and legacy adoption on each matrix leg;
 the Core setup action verifies the binary against `SHA256SUMS` and exposes `MEMCASTLE_BIN` to integration tests.
-Only add stable Core versions to `core_versions` once they support plugin installation.
+The `0.5` matrix leg selects the latest stable patch; Core 0.4.1 predates plugin installation.
 
 gh-ship and git-cliff open a reviewed `release/next` PR. After it merges, the release workflow validates the
 `opencode/vVERSION` tag and publishes the reviewed archive. Configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the

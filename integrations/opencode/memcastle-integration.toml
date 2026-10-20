@@ -9,7 +9,7 @@ description = "Wake-up, recall, checkpoint and mining lifecycle for OpenCode, ov
 
 [compatibility]
 # The MemCastle contract the client half speaks (docs/integration-contract.md) arrived with 0.2.
-memcastle = ">=0.4, <0.6"
+memcastle = ">=0.5, <0.6"
 # OpenCode 1.18.29 is the first release with the plugin hooks this uses; 2.x is covered by the same range.
 agent = ">=1.18.29"
 

@@ -25,8 +25,8 @@ ARCHIVE="$archive" node scripts/smoke_adoption.mjs
 Core packaging generates `manifest.toml` inside the archive with hashes of the built artifacts, without rewriting
 the local `plugin.toml`. Commit `sources/opencode/Cargo.lock`; do not commit generated archives.
 The legacy smoke checks explicit adoption, retained mined history and incremental acquisition after the handoff.
-Core's shared validation tests fixtures, installation and activation against the selected `development` prerelease,
-reports its exact SHA, and repeats these checks on explicitly selected plugin-capable stable versions.
+Core's shared validation tests fixtures, installation and activation against `development` and the latest stable
+`0.5` patch, reporting each Core build's exact SHA.
 CI runs once per pull request and on pushes to `main`.
 
 ## Template updates and releases
