@@ -1,5 +1,5 @@
 format = 1
-memcastle = ">=0.4, <0.6"
+memcastle = ">=0.5, <0.6"
 # Keep the shared OpenCode skill texts in the plugin archive for native skill discovery.
 artifacts = ["skills"]
 
