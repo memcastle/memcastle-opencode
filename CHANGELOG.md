@@ -1,6 +1,6 @@
 # Changelog
 
-## opencode/v0.1.1 - 2026-10-20
+## 0.1.1 - 2026-10-20
 
 
 ### Bug Fixes
@@ -8,7 +8,7 @@
 
 ### tpl
 - Render memcastle-plugin at main (491d808)
-## opencode/v0.1.0 - 2026-10-20
+## 0.1.0 - 2026-10-20
 
 
 ### Bug Fixes
@@ -60,4 +60,3 @@
 - Render memcastle-plugin at main (8ac04a2)
 - Render memcastle-plugin at main (77ed80d)
 - Render memcastle-plugin at main (001b889)
-
