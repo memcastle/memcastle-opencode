@@ -37,4 +37,5 @@ If adding native tests that upload nonempty LCOV, update the corresponding cover
 realistic coverage targets. See the [README](README.md) for installation and release setup.
 
 git-cliff and gh-ship open a reviewed `release/next` PR for releasable commits, then publish the validated
-`opencode/v<version>` archive and `.sha256sum` when it merges. Review the package inventory and hashes.
+`opencode-<version>.tar.gz` archive and `.sha256sum` under the `<version>` tag when it merges.
+Review the package inventory and hashes.

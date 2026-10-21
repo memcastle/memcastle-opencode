@@ -58,7 +58,7 @@ PATH="$PWD/sources/opencode/fixtures/bin:$PATH" memcastle source test sources/op
 
 Use the archive name generated in `dist/` instead of `VERSION`. The archive is independently releasable from Core.
 Packaging leaves `plugin.toml` unchanged and writes a versioned `manifest.toml` inside the archive plus an external
-`.sha256sum`. It also bundles the root `skills/` directory. An `opencode/vVERSION` tag supplies the release version;
+`.sha256sum`. It also bundles the root `skills/` directory. A `VERSION` tag supplies the release version;
 untagged commits receive a development version.
 
 ## CI and releases
@@ -69,8 +69,8 @@ the Core setup action verifies the binary against `SHA256SUMS` and exposes `MEMC
 The `0.5` matrix leg selects the latest stable patch; Core 0.4.1 predates plugin installation.
 
 gh-ship and git-cliff open a reviewed `release/next` PR. After it merges, the release workflow validates the
-`opencode/vVERSION` tag and publishes the reviewed archive. Configure `APP_CLIENT_ID` and `APP_PRIVATE_KEY` in the
-`release` environment for an installed GitHub App.
+`VERSION` tag and publishes the reviewed `opencode-VERSION.tar.gz` archive. Configure `APP_CLIENT_ID` and
+`APP_PRIVATE_KEY` in the `release` environment for an installed GitHub App.
 The publish workflow uses this credential to check the draft release and upload its validated archive.
 
 Native Cargo/Bun coverage and test results upload to Codecov. The project and `integration-opencode` component
