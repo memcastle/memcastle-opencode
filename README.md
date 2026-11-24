@@ -75,6 +75,10 @@ untagged commits receive a development version.
 
 ## CI and releases
 
+Source coverage jobs set `WIT_BINDGEN_DEBUG=1` to emit generated ABI glue under the build directory,
+where cargo-llvm-cov's existing filtering excludes it instead of attributing it to provider code.
+Provider coverage gates and release component builds remain unchanged.
+
 CI builds the modules and validates the packaged artifact against upstream Core `development` only.
 Core's shared workflow tests source fixtures, installation, activation and legacy adoption on each matrix leg;
 the Core setup action verifies the binary against `SHA256SUMS` and exposes `MEMCASTLE_BIN` to integration tests.
