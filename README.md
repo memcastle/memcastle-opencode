@@ -1,5 +1,17 @@
 # MemCastle for OpenCode
 
+## Modules and root tasks
+
+- Source: [opencode](sources/opencode/).
+- Integration: [opencode](integrations/opencode/).
+
+Use `mise tasks ls` for typed `source:opencode:*` and `integration:opencode:*` tasks:
+`build`, `test`, `lint`, and `format:check`.
+Install integration dependencies first; source builds stage `source.wasm` for packaging.
+Requires Rust 1.100+, `wasm32-wasip3`, wasm-tools 1.263.0, and upstream development Core containing `828f0f6`.
+Stable 0.5.2 predates WASI 0.3 despite sharing the development version string; the compatibility range is transitional.
+Run `python3 scripts/validate_component.py source sources/opencode/source.wasm` before host conformance and archive checks.
+
 [![CI][ci-badge]][ci-workflow] [![Codecov][codecov-badge]][codecov-project]
 
 [ci-badge]: https://github.com/memcastle/memcastle-opencode/actions/workflows/ci.yaml/badge.svg?branch=main
@@ -44,7 +56,7 @@ plugin against those releases, since two packages offering the same public integ
 
 ## Build and test locally
 
-Install Bun, Rust with `wasm32-wasip2`, and a plugin-capable MemCastle Core binary. Generate and commit
+Install Bun, Rust 1.100+ with `wasm32-wasip3`, and upstream development MemCastle Core. Generate and commit
 `sources/opencode/Cargo.lock`, build its component to `sources/opencode/source.wasm`, then build the integration
 in `integrations/opencode/` with Bun. The CI workflow contains the reproducible Wasm build and copy commands.
 
@@ -63,10 +75,14 @@ untagged commits receive a development version.
 
 ## CI and releases
 
-CI builds the modules and validates the packaged artifact against Core `development` and `0.5`.
+Source coverage jobs set `WIT_BINDGEN_DEBUG=1` to emit generated ABI glue under the build directory,
+where cargo-llvm-cov's existing filtering excludes it instead of attributing it to provider code.
+Provider coverage gates and release component builds remain unchanged.
+
+CI builds the modules and validates the packaged artifact against upstream Core `development` only.
 Core's shared workflow tests source fixtures, installation, activation and legacy adoption on each matrix leg;
 the Core setup action verifies the binary against `SHA256SUMS` and exposes `MEMCASTLE_BIN` to integration tests.
-The `0.5` matrix leg selects the latest stable patch; Core 0.4.1 predates plugin installation.
+Stable CI validation resumes when a compatible Core release exists.
 
 gh-ship and git-cliff open a reviewed `release/next` PR. After it merges, the release workflow validates the
 `VERSION` tag and publishes the reviewed `opencode-VERSION.tar.gz` archive. Configure `APP_CLIENT_ID` and

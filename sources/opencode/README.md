@@ -1,5 +1,10 @@
 # OpenCode history source
 
+Requires Rust 1.100+, WASI 0.3, source contract 0.5.0, and upstream development Core containing `828f0f6`.
+Stackful `sync: true` bindings preserve ordinary Rust acquisition code behind async WIT exports.
+Generate and commit `Cargo.lock`; `mise run source:opencode:build` at the plugin root stages the release component.
+Validate it with `python3 scripts/validate_component.py source sources/opencode/source.wasm` and wasm-tools 1.263.0.
+
 The conversation history of the [OpenCode](https://opencode.ai) coding agent, as a MemCastle mining source:
 a WebAssembly component built from `src/lib.rs`, one document per session.
 
@@ -25,7 +30,7 @@ memcastle source enable opencode
 memcastle mine opencode                       # or: memcastle mine opencode since=2026-09 dir=/path/to/workspace
 ```
 
-The build needs the `wasm32-wasip2` target (`rustup target add wasm32-wasip2`).
+The build needs the `wasm32-wasip3` target (`rustup target add wasm32-wasip3`).
 [Mining sources](https://github.com/memcastle/memcastle/blob/main/docs/mining-sources.md#opencode) describes what is filed and its limits.
 
 ### Shared source configuration, separate workspace miners

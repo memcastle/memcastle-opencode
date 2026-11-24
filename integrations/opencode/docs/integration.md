@@ -350,7 +350,7 @@ docs/research.md  the OpenCode mechanism map this package follows
 ## Develop
 
 ```sh
-# Build a current MemCastle Core binary separately and set MEMCASTLE_BIN to its absolute path.
+# Download the verified upstream development Core binary and set MEMCASTLE_BIN to its absolute path.
 bun install --frozen-lockfile
 bun run typecheck
 MEMCASTLE_BIN=/path/to/memcastle bun run test
