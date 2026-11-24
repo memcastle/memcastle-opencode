@@ -1,5 +1,9 @@
 # Contributing to memcastle-opencode
 
+Discover typed module tasks with `mise tasks ls`; see [root tasks](README.md#modules-and-root-tasks).
+Use upstream development Core containing `828f0f6` or a verified descendant until a compatible stable release exists.
+Validate components with wasm-tools 1.263.0 through `scripts/validate_component.py` before fixture-backed conformance.
+
 The source and integration are released together from this repository, independently of MemCastle Core.
 Keep both public module IDs `opencode` and their entries in `plugin.toml` stable.
 Changes to the WIT contract, permissions, `since`/`dir` semantics or persisted session identity need a
@@ -7,14 +11,14 @@ compatibility review against existing miners, cursors and mined drawers.
 
 ## Development checks
 
-Install Rust with `wasm32-wasip2`, Bun 1.4.2 and a plugin-capable MemCastle Core binary;
+Install Rust 1.100+ with `wasm32-wasip3`, Bun 1.4.2 and upstream development MemCastle Core;
 point `MEMCASTLE_BIN` at that binary. Build the source component to `sources/opencode/source.wasm` before packaging.
 The release archive records the Bun-built integration's SHA-256, so a different bundler version changes its
 reviewed digest even if the source did not change.
 
 ```sh
 cargo test --manifest-path sources/opencode/Cargo.toml --locked
-# Build the source component for wasm32-wasip2 and copy it to sources/opencode/source.wasm first.
+# Build the source component for wasm32-wasip3 and copy it to sources/opencode/source.wasm first.
 (cd integrations/opencode && bun install --frozen-lockfile && bun run build && bun test --timeout 60000)
 archive="$("$MEMCASTLE_BIN" plugin package --json | jq -r .archive)"
 "$MEMCASTLE_BIN" plugin test "$archive"
